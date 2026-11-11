@@ -62,7 +62,7 @@ def _supabase_save(data):
     except Exception as e:
         print("Supabase SAVE gagal:", e); return False
 def load_data():
-    # FIX29: data JANGAN cuma di /tmp. /tmp Vercel itu sementara: tiap pindah instance / cold start / Redeploy, isinya hilang, produk baru balik ke DATA_AWAL.
+    # Data disimpan di Supabase dan /tmp. /tmp Vercel itu sementara: tiap pindah instance / cold start / Redeploy, isinya hilang, produk baru balik ke DATA_AWAL.
     # Urutan: 1) Supabase (permanen, kalau sudah disetting) 2) /tmp (cache cepat) 3) DATA_AWAL
     d=_supabase_get()
     if isinstance(d, dict) and "products" in d: return d
@@ -89,7 +89,7 @@ def simpan_gambar(file_storage):
     try:
         data = file_storage.read()
         if len(data) > 2*1024*1024:
-            raise ValueError("Foto lebih dari 2MB. Kecilkan dulu / pilih foto lain, atau biarkan browser mengkompres otomatis (pilih lewat tombol foto, jangan drag file mentah).")
+            raise ValueError("Foto lebih dari 2MB. Pilih foto lain.")
         import base64 as _b64
         mime = file_storage.mimetype or "image/jpeg"
         return f"data:{mime};base64,{_b64.b64encode(data).decode()}"
@@ -104,7 +104,7 @@ def gambar_list_for(p):
     g = p.get("gambar","")
     return [g] if g else []
 def kumpulkan_gambar(req):
-    # FIX27 - penyebab utama Internal Server Error:
+    # Catatan:
     # Form lama kirim DUA-DUANYA: file mentah (sampai 2MB/foto) + base64 hasil kompres.
     # Server lalu ngumpulin dua-duanya (dedup gagal karena isinya beda: mentah vs kompres) -> payload bisa 10-20MB -> Vercel limit 4.5MB -> 500/413.
     # Sekarang: kalau base64_list ada (sudah dikompres di browser ke max 700px), pakai ITU SAJA, file mentah diabaikan. Kalau tidak ada base64, baru pakai file.
@@ -138,7 +138,7 @@ def safe_int(v, default=0, label="angka"):
     except Exception:
         raise ValueError(f"{label} harus diisi angka yang benar, bukan '{v}'")
 def error_page(msg):
-    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gagal Simpan - THRIFTORIA</title><style>body{{font-family:system-ui,sans-serif;background:#FDF3E7;color:#2B2118;padding:20px}}.card{{max-width:560px;margin:auto;background:#fff;border-radius:20px;padding:22px}}</style></head><body><div class="card"><h2>Gagal simpan barang</h2><p style="background:#FFF1E0;padding:12px;border-radius:12px">{msg}</p><p style="font-size:13px;color:#6B5A4A">Barang belum tersimpan. Jangan upload ulang foto yang sama berulang-ulang, cek dulu di Admin apakah barangnya sudah masuk.</p><p><a href="/admin" style="color:#2B2118;font-weight:800">Kembali ke Admin &rarr;</a></p></div></body></html>""", 400
+    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Thriftoria</title><style>body{font-family:Inter,system-ui,sans-serif;background:#FBF9F5;color:#2C2A29;padding:24px}.card{max-width:520px;margin:40px auto;background:#fff;border:1px solid #E8E0D6;padding:28px}h2{font-size:20px;margin:0 0 12px}a{color:#A35C3A}</style></head><body><div class="card"><h2>Barang belum tersimpan</h2><p>{msg}</p><p><a href="/admin">Kembali ke Admin</a></p></div></body></html>""", 400
 
 def next_id(items):
     return max([x["id"] for x in items], default=0) + 1
@@ -461,7 +461,7 @@ def tambah():
         return error_page(str(e))
     except Exception as e:
         import traceback; traceback.print_exc()
-        return error_page(f"Server gagal memproses (kemungkinan foto total terlalu besar). Coba lagi dengan foto lebih sedikit / lebih kecil. Detail teknis: {str(e)[:200]}")
+        return error_page(f"Foto terlalu besar. Coba dengan foto lebih sedikit atau ukuran lebih kecil. Detail teknis: {str(e)[:200]}")
 
 @app.route("/admin/edit/<int:pid>", methods=["POST"])
 @login_required
@@ -489,7 +489,7 @@ def edit(pid):
         return error_page(str(e))
     except Exception as e:
         import traceback; traceback.print_exc()
-        return error_page(f"Server gagal memproses edit (kemungkinan foto total terlalu besar). Coba lagi dengan foto lebih sedikit / lebih kecil. Detail teknis: {str(e)[:200]}")
+        return error_page(f"Foto terlalu besar. Coba dengan foto lebih sedikit atau ukuran lebih kecil. Detail teknis: {str(e)[:200]}")
 
 @app.route("/admin/hapus/<int:pid>")
 @login_required
