@@ -54,7 +54,7 @@ def index():
     data = load_data()
     kategori = request.args.get("kategori","")
     lengan = request.args.get("lengan","")
-    products = data["products"]
+    products = [p for p in data["products"] if p["stok"] > 0]  # STOK 0 = HILANG DARI WEB
     if kategori: products = [p for p in products if p["kategori"]==kategori]
     if lengan: products = [p for p in products if p["lengan"]==lengan]
     kategoris = sorted(set([p["kategori"] for p in data["products"]]))
@@ -78,6 +78,75 @@ def beli(pid):
 @app.route("/nota")
 def nota():
     return render_template("nota.html", produk=request.args.get("produk"), qty=request.args.get("qty"), total=request.args.get("total"))
+
+
+# ===== CART + QRIS - 1 TRANSAKSI = 1 KUNCI PEMBAYARAN =====
+import random, string
+def buat_order_id():
+    return "THR-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+@app.route("/checkout")
+def checkout_page():
+    oid = request.args.get("order_id","")
+    return render_template("checkout.html", order_id=oid)
+
+@app.route("/api/checkout", methods=["POST"])
+def api_checkout():
+    # Body: {"nama":"Budi","items":[{"id":1,"qty":1}]}
+    try:
+        body = request.get_json(force=True)
+    except:
+        return jsonify({"error":"JSON tidak valid"}), 400
+    nama = body.get("nama","Pelanggan")
+    items = body.get("items",[])
+    if not items:
+        return jsonify({"error":"Keranjang kosong"}), 400
+    data = load_data()
+    total = 0
+    # Validasi stok dulu, kalau ada yang kurang -> gagal semua, tidak ada yang terpotong
+    for it in items:
+        p = next((x for x in data["products"] if x["id"]==int(it["id"])), None)
+        if not p:
+            return jsonify({"error":f"Produk id {it['id']} tidak ditemukan"}), 400
+        if p["stok"] < int(it["qty"]):
+            return jsonify({"error":f"Stok {p['nama']} tidak cukup. Sisa {p['stok']}"}), 400
+    # KUNCI STOK: langsung kurangi stok, barang terkunci untuk transaksi ini
+    oid = buat_order_id()
+    rincian = []
+    for it in items:
+        p = next((x for x in data["products"] if x["id"]==int(it["id"])))
+        qty = int(it["qty"])
+        sub = p["harga"]*qty
+        total += sub
+        p["stok"] -= qty  # stok berkurang, kalau jadi 0 -> hilang dari web
+        rincian.append({"nama":p["nama"],"qty":qty,"harga":p["harga"],"subtotal":sub})
+        data["orders"].append({"id":next_id(data["orders"]), "order_id":oid, "tanggal":datetime.now().strftime("%Y-%m-%d %H:%M"), "nama_pembeli":nama, "produk_nama":p["nama"], "qty":qty, "total":sub, "status":"Menunggu Pembayaran", "tipe":"penjualan"})
+    save_data(data)
+    # QRIS text: format untuk QRIS, 1 order_id = 1 pembayaran, nominal terkunci
+    qris_text = f"THRIFTORIA|{oid}|TOTAL:{total}|NAMA:{nama}"
+    return jsonify({"order_id":oid, "total":total, "rincian":rincian, "qris_text":qris_text, "status":"Menunggu Pembayaran", "locked":True, "message":"Stok terkunci 10 menit. Bayar sesuai nominal, jangan bayar 2x untuk order yang sama."})
+
+@app.route("/api/order/<oid>")
+def api_order(oid):
+    data = load_data()
+    orders = [o for o in data["orders"] if o.get("order_id")==oid]
+    if not orders:
+        return jsonify({"error":"Order tidak ditemukan"}), 404
+    total = sum(o["total"] for o in orders)
+    return jsonify({"order_id":oid, "total":total, "orders":orders, "status":orders[0]["status"]})
+
+@app.route("/api/confirm-payment/<oid>", methods=["POST"])
+def api_confirm(oid):
+    data = load_data()
+    found=False
+    for o in data["orders"]:
+        if o.get("order_id")==oid:
+            o["status"]="Lunas"
+            found=True
+    if not found:
+        return jsonify({"error":"Order tidak ditemukan"}), 404
+    save_data(data)
+    return jsonify({"order_id":oid, "status":"Lunas"})
 
 # ===== ADMIN =====
 @app.route("/login", methods=["GET","POST"])
