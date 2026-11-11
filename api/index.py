@@ -257,12 +257,12 @@ def api_checkout():
     items = body.get("items",[])
     if not items:
         return jsonify({"error":"Keranjang kosong"}), 400
-    # Validasi pengiriman: kalau bukan ambil di toko, wajib kota + ongkir sudah dihitung
-    if kurir != "Ambil di Toko (Gratis)":
-        if not kota or not kota_id:
-            return jsonify({"error":"Pilih Kecamatan / Kota dulu, biar ongkir kehitung dari ekspedisi"}), 400
-        if ongkir <= 0:
-            return jsonify({"error":"Ongkir belum kehitung. Pilih kota + kurir dulu, tunggu ongkir muncul"}), 400
+    # FIX20: JANGAN tolak checkout kalau ongkir 0 / kota kosong (biar tombol tidak mati).
+    # Kalau customer pakai versi lama (cache) atau ongkir gagal kehitung, tetap boleh checkout.
+    # Ongkir ditandai 0 = "Ongkir Konfirmasi WA", admin chat customer untuk ongkir aslinya.
+    # Ini yang bikin tombol Checkout kemarin kayak tidak respon: backend return 400 tapi frontend lama tidak tampilkan error.
+    if kurir != "Ambil di Toko (Gratis)" and ongkir <= 0:
+        ongkir = 0  # tetap lanjut, admin konfirmasi via WA
     data = load_data()
     total = 0
     # Validasi stok dulu, kalau ada yang kurang -> gagal semua, tidak ada yang terpotong

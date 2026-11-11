@@ -1,39 +1,30 @@
-THRIFTORIA FIX19 - Alternatif Ongkir Aman (Biteship / Komerce) - Gak Perlu Buka rajaongkir.com yang ke-flag McAfee
+THRIFTORIA FIX20 - Fix Tombol Checkout Tidak Respon (Mati)
 
-KENAPA McAfee NGE-FLAG rajaongkir.com?
-- McAfee WebAdvisor sering salah flag web Indonesia.
-- rajaongkir.com itu domain lama (dari 2014). Sekarang RajaOngkir sudah gabung ke Komerce, domain barunya komerce.id.
-- Jadi jangan klik "Visit anyway" kalau tidak nyaman. Itu false positive, bukan berarti RajaOngkir penipuan.
+BUG DI SCREENSHOT:
+- Keranjang masih tampilan LAMA: cuma ada Nama (yanda), tidak ada No HP, Alamat, Kota, Kurir, Ongkir.
+  Artinya browser masih buka versi lama (cache), belum Fix19.
+- Backend Fix18/19 menolak checkout kalau ongkir 0 / kota kosong (return 400), tapi frontend lama tidak menampilkan error-nya.
+  Hasilnya: klik Checkout -> diam, tidak pindah, tidak ada alert. Kayak tombol mati.
 
-PILIHAN AMAN (PILIH SALAH SATU SAJA, YANG PALING GAMPANG):
-
-OPSI A - BITESHIP (REKOMENDASI, PALING AMAN, TIDAK KE-FLAG)
-1. Buka biteship.com (aman, tidak ke-flag McAfee)
-2. Daftar gratis -> Dashboard -> API Key -> Copy
-3. Di Vercel: Settings -> Environment Variables:
-   BITESHIP_API_KEY = (paste API Key kamu)
-4. Redeploy. Ongkir langsung asli dari JNE, J&T, SiCepat, dll.
-
-OPSI B - KOMERCE (PENERUS RAJAONGKIR)
-1. Buka komerce.id (domain baru RajaOngkir, aman)
-2. Daftar -> Dashboard -> API Key RajaOngkir Starter
-3. Di Vercel:
-   RAJAONGKIR_API_KEY = (paste API Key kamu)
-   ORIGIN_CITY_ID = 152
-4. Redeploy.
-
-OPSI C - TETAP ESTIMASI + KONFIRMASI WA (KALAU MAU TANPA API SAMA SEKALI)
-- Tidak perlu API sama sekali.
-- Ongkir di web tampil sebagai Estimasi.
-- Setelah customer checkout, admin chat WA: "Kak, ongkir aslinya Rp XX, totalnya jadi Rp XX, mau lanjut?"
-- Customer transfer selisih ongkir via QRIS kedua. Ini cara yang dipakai banyak thrift kecil.
+YANG DIPERBAIKI:
+1. Backend TIDAK lagi menolak checkout kalau ongkir 0:
+   - Ongkir 0 = "Ongkir Konfirmasi WA", tetap boleh checkout.
+   - Admin chat WA customer untuk ongkir aslinya.
+   - Jadi tombol tidak akan mati lagi karena validasi ongkir.
+2. Frontend:
+   - Kalau form pengiriman belum muncul (cache lama), muncul alert jelas:
+     "Web kamu masih versi lama (cache). Refresh dulu pakai Ctrl+Shift+R, baru isi No HP, Alamat, Kota, baru Checkout."
+   - Kalau fetch gagal / server return error, muncul alert: "Checkout gagal: <pesan error>" - tidak diam lagi.
+   - Kalau ongkir 0, muncul confirm: "Ongkir belum kehitung (Rp 0). Lanjut checkout? Nanti admin chat WA kamu..."
+   - Footer: "Thriftoria Fix20" biar ketahuan versi berapa yang kebuka.
+3. Cara tes yang benar:
+   - Habis Redeploy, di HP/browser: refresh pakai Ctrl+Shift+R (di HP: titik tiga -> Reload / Hard Reload)
+   - Cek keranjang: harus ada No HP, Alamat, Kota, Kurir, Ongkir. Kalau masih cuma Nama doang, berarti masih cache lama, refresh lagi sampai muncul.
+   - Isi semua, klik Checkout -> harus pindah ke QRIS, tidak diam lagi.
 
 CARA UPDATE:
 git add .
-git commit -m "ongkir alternatif biteship komerce aman"
+git commit -m "fix checkout tidak respon"
 git push
 Vercel -> Redeploy tanpa cache
-
-CATATAN:
-- API-nya (api.rajaongkir.com / api.biteship.com) beda dengan web-nya (rajaongkir.com). Jadi walaupun web lama ke-flag, API-nya tetap jalan.
-- Kalau kamu tidak mau ribet API, pakai Opsi C dulu saja, tetap jalan, tidak perlu buka web yang ke-flag.
+Browser -> Ctrl+Shift+R
