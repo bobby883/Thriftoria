@@ -1,23 +1,25 @@
-THRIFTORIA FIX24 - QRIS Nyangkut di Skeleton "Memuat QRIS..."
+THRIFTORIA FIX25 - Tombol SAYA SUDAH BAYAR & CEK STATUS Tidak Respon
 
-SCREENSHOT: /checkout?order_id=THR-JXTVBF - skeleton muter terus, QRIS tidak muncul.
+SCREENSHOT: QRIS sudah muncul (THR-22KYHF), tapi klik SAYA SUDAH BAYAR / CEK STATUS diam saja, tidak ada pesan, tidak pindah halaman.
 
-ADA 2 PENYEBAB, 2-DUANYA DIBENERIN:
-1. BUG JS (penyebab langsung): di checkout.html load() lama, kalau /api/order balikin error/404, kode ini jalan:
-   d.total.toLocaleString() -> padahal d.total = undefined (karena d = {error:...})
-   -> TypeError, fungsi load() berhenti di tengah, box TIDAK PERNAH diganti, skeleton muter selamanya.
-   Jadi bukan QRIS-nya yang lama, tapi halaman-nya crash diam-diam.
+PENYEBAB (ketemu di kode Fix24):
+- Fungsi confirmPay() dan cekStatus() HILANG dari checkout.html. Kehapus waktu Fix24 rewrite load() pakai regex.
+- Tombolnya masih onclick="confirmPay()" / onclick="cekStatus()", tapi fungsinya tidak ada -> browser lempar ReferenceError diam-diam, klik tidak ngapa-ngapain.
+- Bonus bug: templates/nota.html TIDAK ADA filenya. Jadi kalaupun confirmPay jalan, redirect ke /nota akan 500 TemplateNotFound.
 
-2. BUG SERVERLESS (penyebab kenapa 404): data disimpan di /tmp Vercel. Vercel bisa pindah instance / reset /tmp kapan saja, apalagi habis Redeploy.
-   Order dibuat di instance A, halaman QRIS kebuka di instance B -> /api/order bilang "Order tidak ditemukan" -> kena bug no.1 -> skeleton.
-
-YANG DIPERBAIKI FIX24:
-- load() ditulis ulang: cek error dulu TANPA pakai d.total. Kalau error, tampilkan pesan jelas + tombol COBA LAGI + KEMBALI KE TOKO, tidak pernah lagi nyangkut di skeleton.
-- Fallback localStorage: pas checkout di index.html, snapshot order (order_id, total, subtotal, ongkir, nama, alamat, kurir, rincian) disimpan di HP (thriftoria_last_order). Kalau /api/order 404, halaman QRIS tetap render dari snapshot HP, dengan peringatan kuning "Server Vercel ke-reset, QRIS dari data HP". Jadi pembeli tetap bisa bayar.
-- confirmPay() juga anti-crash: kalau server 404, tetap lanjut ke Nota dari snapshot + suruh konfirmasi ke admin via WA.
-- renderOrder() dipisah jadi fungsi sendiri, dipakai API maupun fallback, biar tampilannya sama.
-
-CATATAN JUJUR: Fix ini bikin QRIS tetap muncul walau server ke-reset, tapi data order di server tetap bisa hilang kalau Vercel reset /tmp. Solusi permanennya nanti pindah database (misal Supabase / Upstash Redis), bukan /tmp. Untuk sekarang, kalau order hilang di server, admin cek Nota dari pembeli + konfirmasi WA.
+YANG DIPERBAIKI FIX25:
+1. confirmPay() ditulis ulang lengkap:
+   - Tampilkan "Memproses konfirmasi...", tombol jadi MEMPROSES... + disabled biar tidak diklik 2x
+   - POST /api/confirm-payment/<oid> -> kalau sukses, update snapshot HP jadi Lunas, tampilkan "Pembayaran dikonfirmasi!" -> pindah ke /nota
+   - Kalau server 404 (Vercel /tmp ke-reset): tampilkan peringatan + tetap lanjut ke Nota dari snapshot HP, suruh konfirmasi ke admin via WA. Tidak diam lagi.
+2. cekStatus() ditulis ulang lengkap:
+   - GET /api/order/<oid> -> kalau Lunas pindah ke Nota, kalau masih Menunggu tampilkan "Belum lunas..."
+   - Kalau server error, cek snapshot HP, kalau snapshot sudah Lunas pindah ke Nota, kalau belum suruh klik SAYA SUDAH BAYAR.
+3. Timer 10:00 dikembalikan (juga ikut kehapus di Fix24).
+4. nota.html DIBUAT BARU (sebelumnya tidak ada):
+   - Kalau server punya order, tampilkan nota dari server
+   - Kalau server tidak punya (ke-reset), tampilkan nota dari snapshot HP + banner kuning "Screenshot nota ini + kirim ke admin via WA"
+   - Kalau dua-duanya tidak ada, tampilkan pesan jelas + tombol Kembali ke Toko, bukan halaman 500 kosong.
 
 CARA UPDATE: upload SEMUA isi zip, git add . ; commit ; push ; Vercel Redeploy ; Ctrl+Shift+R
-CARA TES: checkout Kaos Olive lagi -> halaman QRIS harus langsung muncul (tidak skeleton). Matikan / refresh berkali-kali tetap muncul. Kalau muncul banner kuning, itu artinya fallback HP yang jalan - totalnya tetap benar.
+CARA TES: Checkout lagi -> QRIS muncul -> klik CEK STATUS -> harus muncul "Belum lunas..." (bukan diam). Bayar (simulasi) -> klik SAYA SUDAH BAYAR -> harus muncul "Pembayaran dikonfirmasi!" -> pindah ke Nota.
