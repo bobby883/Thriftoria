@@ -17,7 +17,7 @@ app.secret_key = "thriftoria-secret-vercel"
 # ===== DATA AWAL - THRIFTORIA =====
 DATA_AWAL = {
   "products": [
-    {"id":1, "nama":"Beanie Hat Thriftoria", "kategori":"Aksesoris", "lengan":"Tanpa Lengan", "harga":25000, "stok":36, "deskripsi":"Beanie premium Thriftoria"},
+    {"id":1, "nama":"Beanie Hat Thriftoria", "kategori":"Aksesoris", "lengan":"Tanpa Lengan", "harga":25000, "stok":36, "deskripsi":"Beanie premium Thriftoria", "gambar":""},
     {"id":2, "nama":"Kaos Oversize Pendek - Hitam", "kategori":"Kaos", "lengan":"Lengan Pendek", "harga":35000, "stok":8, "deskripsi":"Kaos oversize hitam"},
     {"id":3, "nama":"Kaos Oversize Pendek - Olive", "kategori":"Kaos", "lengan":"Lengan Pendek", "harga":35000, "stok":48, "deskripsi":"Kaos oversize olive"},
     {"id":4, "nama":"Kaos Oversize Panjang - Cream", "kategori":"Kaos", "lengan":"Lengan Panjang", "harga":40000, "stok":27, "deskripsi":"Kaos oversize cream"},
@@ -34,6 +34,8 @@ DATA_AWAL = {
 DATA_FILE = "/tmp/thriftoria_data.json"  # Vercel serverless, data reset kalau redeploy
 
 def load_data():
+    # pastikan produk lama tetap punya field gambar
+    _d = None
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE) as f: return json.load(f)
@@ -44,6 +46,21 @@ def save_data(data):
     try:
         with open(DATA_FILE, "w") as f: json.dump(data, f)
     except: pass
+
+
+def simpan_gambar(file_storage):
+    # HP upload -> base64, biar jalan di Vercel serverless (tanpa simpan file)
+    if not file_storage or not file_storage.filename:
+        return ""
+    try:
+        data = file_storage.read()
+        if len(data) > 2*1024*1024:  # max 2MB, biar tidak berat
+            data = data[:2*1024*1024]
+        import base64 as _b64
+        mime = file_storage.mimetype or "image/jpeg"
+        return f"data:{mime};base64,{_b64.b64encode(data).decode()}"
+    except:
+        return ""
 
 def next_id(items):
     return max([x["id"] for x in items], default=0) + 1
@@ -182,7 +199,11 @@ def admin_dashboard():
 @login_required
 def tambah():
     data=load_data()
-    data["products"].append({"id":next_id(data["products"]), "nama":request.form["nama"], "kategori":request.form["kategori"], "lengan":request.form["lengan"], "harga":int(request.form["harga"]), "stok":int(request.form["stok"]), "deskripsi":request.form.get("deskripsi","")})
+    gambar = simpan_gambar(request.files.get("gambar"))
+    # kalau tidak upload file, tapi kirim base64 dari HP (form gambar_base64)
+    if not gambar:
+        gambar = request.form.get("gambar_base64","")[:500000]
+    data["products"].append({"id":next_id(data["products"]), "nama":request.form["nama"], "kategori":request.form["kategori"], "lengan":request.form["lengan"], "harga":int(request.form["harga"]), "stok":int(request.form["stok"]), "deskripsi":request.form.get("deskripsi",""), "gambar":gambar})
     save_data(data); return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/edit/<int:pid>", methods=["POST"])
@@ -191,7 +212,10 @@ def edit(pid):
     data=load_data()
     for p in data["products"]:
         if p["id"]==pid:
-            p["nama"]=request.form["nama"]; p["kategori"]=request.form["kategori"]; p["lengan"]=request.form["lengan"]; p["harga"]=int(request.form["harga"]); p["stok"]=int(request.form["stok"]); p["deskripsi"]=request.form.get("deskripsi","")
+            p["nama"]=request.form["nama"]; p["kategori"]=request.form["kategori"]; p["lengan"]=request.form["lengan"]; p["harga"]=int(request.form["harga"]); p["stok"]=int(request.form["stok"])
+            _g = simpan_gambar(request.files.get("gambar"))
+            if _g: p["gambar"]=_g
+            elif request.form.get("gambar_base64"): p["gambar"]=request.form.get("gambar_base64","")[:500000]; p["deskripsi"]=request.form.get("deskripsi","")
     save_data(data); return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/hapus/<int:pid>")
