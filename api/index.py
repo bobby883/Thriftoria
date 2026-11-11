@@ -25,8 +25,6 @@ DATA_AWAL = {
     {"id":6, "nama":"Cargo Pants - Khaki", "kategori":"Celana", "lengan":"Lengan Panjang", "harga":95000, "stok":13, "deskripsi":"Cargo khaki"},
   ],
   "orders": [
-    {"id":1, "tanggal":"2026-11-11 10:00", "nama_pembeli":"Budi", "produk_nama":"Kaos Oversize Pendek - Hitam", "qty":2, "total":70000, "status":"Lunas", "tipe":"penjualan"},
-    {"id":2, "tanggal":"2026-11-10 14:30", "nama_pembeli":"Supplier Jakarta", "produk_nama":"Hoodie Thriftoria Basic - Black", "qty":20, "total":1200000, "status":"Lunas", "tipe":"pembelian"},
   ]
 }
 
