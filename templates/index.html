@@ -61,7 +61,19 @@ select,input{padding:10px 12px;background:rgba(255,255,255,.8);backdrop-filter:b
 <div class="topbar"><div style="display:flex;flex-direction:column;line-height:1.2"><div class="logo">THRIFTORIA.STORE</div><span style="letter-spacing:1.5px;font-size:11px;color:#7A6A5E;font-weight:700">INDONESIA STREETWEAR</span></div><button class="cartbtn" onclick="toggleCart(true)">Keranjang &nbsp; <span id="cartCount">0</span></button></div>
 <div class="wrap">
 <div class="glass-hero"><h1>THRIFTORIA.STORE</h1><p style="letter-spacing:1.5px;color:#7A6A5E;font-weight:700;font-size:13px">INDONESIA STREETWEAR • PRELOVED • THRIFT • VINTAGE</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span class="badge">100% PRELOVED</span><span class="badge sage">STOK REAL-TIME</span><span class="badge">BAYAR QRIS</span></div></div>
-<div class="promo"><span>Stok 1 = Rebutan! Checkout = stok terkunci buat kamu.</span><span>1 Transaksi = 1 QRIS = 1 Kunci</span></div>
+<div class="glass-hero" style="margin-top:16px">
+<h2 style="margin:0 0 8px;font-size:20px">Tentang THRIFTORIA — Kenapa Toko Ini Berdiri?</h2>
+<p style="color:#6B5A4A;margin:0;line-height:1.7">
+<b>THRIFTORIA</b> berdiri dari hobi hunting baju bekas. Awalnya cuma iseng keliling thrift, nemu baju bagus tapi harganya nggak masuk akal kalau beli baru. Dari situ kepikiran: <i>"Kenapa baju sebagus ini harus dibuang, padahal masih layak banget dipakai?"</i><br><br>
+Jadi kita mulai kurasi satu-satu. Nggak semua baju bekas kita ambil. Yang kita jual cuma yang masih bagus, sudah dicuci, sudah dicek minusnya, dan sudah kita kasih grade jujur: <b>Grade A, B, atau C</b>. Kalau ada minus, kita tulis apa adanya di deskripsi, nggak ditutup-tutupin.<br><br>
+Misi kita simpel: <b>baju bagus nggak harus mahal, dan baju bekas bukan berarti baju jelek.</b> Buat anak muda Indonesia yang mau tampil streetwear, tapi tetap hemat dan tetap peduli bumi — karena tiap baju thrift yang kamu beli, berarti satu baju lagi yang nggak jadi sampah.
+</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<span class="badge">EST. 2025 • INDRAPURA, INDONESIA</span>
+<span class="badge sage">DIKURASI SATU-SATU</span>
+<span class="badge">GRADE JUJUR, NO TIPU-TIPU</span>
+</div>
+</div>
 <form class="filter" method="get"><select name="kategori"><option value="">Semua Kategori</option>{% for k in kategoris %}<option value="{{k}}" {% if kategori_filter==k %}selected{% endif %}>{{k}}</option>{% endfor %}</select><select name="lengan"><option value="">Semua Lengan</option>{% for l in lengans %}<option value="{{l}}" {% if lengan_filter==l %}selected{% endif %}>{{l}}</option>{% endfor %}</select><button class="btn" style="flex:1">Filter</button><a href="/" style="color:#2B2118;align-self:center">Reset</a></form>
 <div id="skeleton" class="grid">
   <div class="glass-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
@@ -70,7 +82,7 @@ select,input{padding:10px 12px;background:rgba(255,255,255,.8);backdrop-filter:b
   <div class="glass-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
 </div>
 <div class="grid" id="realGrid" style="display:none">{% for p in products %}<div class="glass-card">{% if p.stok==1 %}<span class="badge hot">SISA 1 - REBUTAN</span>{% elif p.stok<=3 %}<span class="badge">SISA {{p.stok}} AJA</span>{% else %}<span class="badge sage">{{p.kategori}} • {{p.lengan}}</span>{% endif %}{% if p.get("gambar") %}<img src="{{p.get("gambar")}}" style="width:100%;height:200px;object-fit:cover;border-radius:14px;background:#F0E2D2">{% else %}<div style="width:100%;height:200px;background:linear-gradient(135deg,#FCE8D8,#EAF3EA);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:48px">👕</div>{% endif %}<h3>{{p.nama}}</h3><p style="color:#7A6A5E;margin:0">{{p.deskripsi}}</p><p style="margin:6px 0;display:flex;gap:6px;flex-wrap:wrap"><span class="badge">Grade {{p.get("grade","A")}}</span><span class="badge sage">{{p.get("gender","Unisex")}}</span><span class="badge">Ukuran {{p.get("ukuran","All Size")}}</span><span class="badge">{{p.kategori}} • {{p.lengan}}</span></p><p class="price">Rp {{ "{:,}".format(p.harga) }} <span style="font-size:13px;color:#7A6A5E;font-weight:600">• Stok {{p.stok}}</span></p><div style="display:flex;gap:8px;align-items:center"><input type="number" id="qty-{{p.id}}" value="1" min="1" max="{{p.stok}}" style="width:70px"><button class="btn-glass" onclick="addToCart({{p.id}}, '{{p.nama}}', {{p.harga}}, {{p.stok}})">+ Keranjang</button></div></div>{% endfor %}</div>
-<p style="text-align:center;color:#7A6A5E;margin-top:30px">THRIFTORIA — Cream Glass Edition • Preloved, tapi tetap paling baru di mata kamu.</p></div>
+<p style="text-align:center;color:#7A6A5E;margin-top:30px">THRIFTORIA • Preloved, tapi tetap paling baru di mata kamu.</p></div>
 <div class="overlay" id="overlay" onclick="toggleCart(false)"></div>
 <div class="drawer" id="drawer"><h2>Keranjang</h2><p style="color:#7A6A5E">Stok belum terkunci sampai kamu klik Checkout + QRIS muncul.</p><div id="cartItems"></div><hr><input id="buyerName" placeholder="Nama kamu (wajib)" style="width:100%;margin-bottom:10px"><p><b>Total: Rp <span id="cartTotal">0</span></b></p><button class="btn" style="width:100%;padding:12px" onclick="checkout()">Checkout — Bayar QRIS</button><button onclick="toggleCart(false)" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,.7);border:1px solid rgba(43,33,24,.15);border-radius:12px;cursor:pointer">Tutup</button><p style="font-size:12px;color:#7A6A5E">Setelah Checkout, stok langsung dikunci. 1 order = 1 QRIS, jangan bayar 2x.</p></div>
 <script>

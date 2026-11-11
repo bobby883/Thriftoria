@@ -1,33 +1,27 @@
-THRIFTORIA FIX12 - 1 Tombol Tambah Barang (Modal)
+THRIFTORIA FIX13 - Promo jadi Tentang Toko (Berdirinya Thriftoria)
 
-YANG BARU:
-- Di Admin (/admin), form tambah yang panjang DIHAPUS, diganti 1 tombol besar:
-  [+ TAMBAH BARANG]
-- Klik tombol itu -> muncul popup / modal tambah barang, isinya lengkap:
-  * Nama Barang
-  * Foto (HP Galeri / Kamera, preview langsung)
-  * Deskripsi (kondisi, minus, bahan)
-  * Grade: A - Like New / B - Bagus minus dikit / C - Ada minus jelas
-  * Cocok untuk: Wanita / Pria / Unisex
-  * Ukuran: S / M / L / XL / XXL / All Size
-  * Kategori, Lengan, Harga, Stok
-  * Tombol SIMPAN BARANG
+YANG DIGANTI:
+- Bagian yang ditandai pertama (promo):
+  LAMA: "Stok 1 = Rebutan! Checkout = stok terkunci buat kamu. 1 Transaksi = 1 QRIS = 1 Kunci"
+  BARU: "Tentang THRIFTORIA — Kenapa Toko Ini Berdiri?"
+  Isinya cerita berdirinya toko:
+  - Berdiri dari hobi hunting baju bekas
+  - Kenapa baju bagus harus dibuang padahal masih layak?
+  - Kurasi satu-satu, dicuci, dicek minus, grade jujur A/B/C
+  - Misi: baju bagus tidak harus mahal, baju bekas bukan baju jelek, peduli bumi
+  - Badge: EST. 2025 • INDRAPURA, INDONESIA | DIKURASI SATU-SATU | GRADE JUJUR
 
-- Di tabel Edit, tiap produk juga bisa edit Grade / Gender / Ukuran langsung, tanpa hapus produk.
+- Footer juga dibersihin:
+  LAMA: "THRIFTORIA — Cream Glass Edition • Preloved..."
+  BARU: "THRIFTORIA • Preloved, tapi tetap paling baru di mata kamu."
 
-- Di Toko, tiap produk sekarang tampil badge:
-  [Grade A] [Wanita] [Ukuran L] [Kaos • Lengan Pendek]
-
-CATATAN: Halaman yang kamu screenshot itu adalah /analyst (Data Analyst), memang tidak ada tambah barang di sana. Tambah barang hanya ada di /admin.
+Info stok rebutan & QRIS tidak hilang total, tetap ada di keranjang & checkout (tempatnya yang lebih pas), jadi tidak mengganggu cerita toko.
 
 CARA UPDATE:
 git add .
-git commit -m "1 tombol tambah barang modal grade gender ukuran"
+git commit -m "promo jadi tentang thriftoria"
 git push
 Vercel -> Redeploy tanpa cache
 
-CARA PAKAI:
-1. Buka /admin-login -> login
-2. Klik [+ TAMBAH BARANG]
-3. Isi foto, deskripsi, grade, harga, Wanita/Pria, ukuran
-4. SIMPAN BARANG -> langsung muncul di toko
+KALAU MAU UBAH CERITANYA:
+Edit di templates/index.html, cari "Tentang THRIFTORIA — Kenapa Toko Ini Berdiri?" lalu ubah paragrafnya. Misalnya tahun berdirinya, kota kamu, atau cerita awal kamu mulai thrift.
