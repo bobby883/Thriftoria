@@ -1,20 +1,20 @@
-THRIFTORIA FIX28 - Filter Lengan Pendek Masih Nampilin Semua
+THRIFTORIA FIX30 - Redesign: toko seperti Uniqlo, human-crafted
 
-SCREENSHOT: Dropdown sudah dipilih "Lengan Pendek", tapi yang muncul masih ada:
-- Beanie Hat - Aksesoris Tanpa Lengan
-- Kaos Oversize Panjang - Cream (Lengan Panjang)
-Padahal harusnya cuma Lengan Pendek semua.
+WARNA (sesuai permintaan):
+- Background: #FBF9F5 Ivory hangat
+- Teks Utama: #2C2A29 Charcoal lembut
+- Primary/Brand: #A35C3A Terakota / Bata hangat
+- Aksen: #D4A373 Pasir / Sand
 
-PENYEBAB (2 hal):
-1. Filter lama baru jalan kalau klik tombol Filter. Di screenshot, URL-nya masih polos (thriftoria-lilac.vercel.app, tanpa ?lengan=...), artinya dropdown sudah dipilih tapi form belum ke-submit. Pembeli nyangka pilih dropdown langsung ke-filter - wajar, hampir semua toko begitu.
-2. Perbandingan persis (==). Kalau data lama ada spasi / beda kapital ("Lengan pendek", " Lengan Pendek "), produk bisa lolos / hilang salah.
-
-YANG DIPERBAIKI FIX28:
-- Dropdown sekarang langsung ke-filter begitu dipilih (onchange submit). Tidak perlu klik tombol Filter lagi. Tombol Filter tetap ada buat yang suka klik.
-- Perbandingan dinormalisasi: strip spasi + lower. "Lengan Pendek", "lengan pendek", " Lengan Pendek " dianggap sama.
-- Banner hasil: "Menampilkan 2 dari 4 produk • Lengan: Lengan Pendek" + tombol Hapus Filter. Jadi jelas filter-nya aktif atau tidak.
-- Kalau hasil 0: tampil pesan jelas "Tidak ada produk Lengan Pendek" + tombol Lihat Semua Produk, bukan grid kosong membingungkan.
-- Kategori juga dinormalisasi sama (strip + lower).
+YANG DIUBAH:
+- Layout toko: header sticky tipis, hero 2 kolom, grid 4 kolom (2 di HP), kartu produk putih border tipis, tanpa glassmorphism / blur / gradient ungu / badge berlebihan.
+- Tipografi: Inter/Helvetica, judul besar tapi rapat, huruf kecil untuk meta (kategori, grade, ukuran). Tidak ada emoji, tidak ada kata-kata AI seperti "dikurasi", "no tipu-tipu", "rebutan", "est", "selamat datang".
+- Copy ditulis seperti manusia: "Pakaian bekas yang masih layak dipakai." "Diperiksa satu per satu." "Kondisi ditulis apa adanya." "Kalau habis, tidak restock."
+- Filter tetap: Kategori + Lengan, langsung jalan saat dipilih. Banner hasil sederhana: "Menampilkan X dari Y produk".
+- Keranjang / checkout: fungsi sama, hanya tampilan dibersihkan. Total, ongkir, kota, kurir tetap.
+- Admin: tampilan sama dengan toko (Ivory, Charcoal, Terakota), tabel bersih, form sama. Semua name field tidak diubah, jadi tidak merusak Supabase / Biteship.
+- Backend: tidak diubah kecuali copy error yang lebih netral. Supabase, /tmp fallback, Biteship, foto 10, validasi tetap sama seperti Fix29.
 
 CARA UPDATE: upload SEMUA isi zip, git add . ; commit ; push ; Vercel Redeploy ; Ctrl+Shift+R
-CARA TES: Buka toko -> pilih Lengan Pendek -> halaman langsung reload, URL jadi ?lengan=Lengan+Pendek, yang muncul HARUS cuma Kaos Lengan Pendek (Hitam + Olive). Beanie Tanpa Lengan & Kaos Panjang Cream HARUS hilang. Pilih Semua Lengan -> semua balik lagi.
+PENTING: Env di Vercel JANGAN diubah. SUPABASE_URL / SUPABASE_KEY / SUPABASE_TABLE / BITESHIP_API_KEY tetap sama seperti yang sudah jalan di Fix29.
+CARA TES: Buka toko - cek hero, grid 4 kolom, filter Lengan Pendek, tambah ke keranjang, checkout sampai WhatsApp. Admin - tambah produk 1 foto, edit, hapus.

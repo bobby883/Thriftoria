@@ -1,0 +1,11 @@
+SUPABASE - COPY PASTE INI KE SQL EDITOR:
+CREATE TABLE IF NOT EXISTS thriftoria_data (id INT PRIMARY KEY, data JSONB NOT NULL);
+INSERT INTO thriftoria_data (id, data) VALUES (1, '{"products": [], "orders": []}') ON CONFLICT (id) DO NOTHING;
+ALTER TABLE thriftoria_data ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "buka semua" ON thriftoria_data FOR ALL USING (true) WITH CHECK (true);
+
+VERCEL ENV:
+SUPABASE_URL = <Project URL>
+SUPABASE_KEY = <anon public key>
+SUPABASE_TABLE = thriftoria_data
+CEK: /api/storage-status -> supabase_disetting harus true

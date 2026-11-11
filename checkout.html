@@ -1,0 +1,80 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bayar QRIS - THRIFTORIA</title><style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Inter,system-ui,sans-serif;background:#FDF3E7;color:#2B2118} .wrap{max-width:620px;margin:auto;padding:20px} .card{background:rgba(255,255,255,.70);backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.9);box-shadow:0 10px 30px rgba(43,33,24,.08);border-radius:24px;padding:22px} .qris{background:#fff;border:1px solid rgba(43,33,24,.10);border-radius:18px;padding:16px;text-align:center} .timer{font-size:28px;font-weight:900;color:#B42318} .btn{background:#2B2118;color:#fff;padding:12px 16px;border-radius:14px;border:0;font-weight:800;cursor:pointer;width:100%;box-shadow:0 6px 16px rgba(43,33,24,.18)} .btn-glass{background:rgba(255,255,255,.75);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.9);padding:12px 16px;border-radius:14px;font-weight:800;cursor:pointer;width:100%}
+.skeleton{background:linear-gradient(90deg,#F0E2D2 25%,#FFF8F0 37%,#F0E2D2 63%);background-size:400% 100%;animation:skeletonLoad 1.2s infinite;border-radius:12px} @keyframes skeletonLoad{0%{background-position:100% 0}100%{background-position:0 0}} .skel-line{height:14px;margin:8px 0} .skel-img{height:240px;width:240px;margin:auto}
+
+@media (max-width:640px){ .wrap{padding:12px} .card{padding:16px;border-radius:18px} h1{font-size:24px} .qris img{width:200px !important;height:200px !important} }
+</style></head><body><div class="wrap"><img src="/static/logo.png" style="height:44px;width:auto;border-radius:10px;background:#FFF6EC;padding:4px"><h1>Checkout — THRIFTORIA</h1><p>INDONESIA STREETWEAR • 1 Transaksi = 1 QRIS = 1 Kunci</p><div style="display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.75);backdrop-filter:blur(16px);border:1px solid #fff;border-radius:16px;padding:12px;margin-bottom:12px;box-shadow:0 6px 18px rgba(43,33,24,.06)">
+<img src="/static/logo.png" style="height:44px;width:auto;border-radius:10px;background:#FFF6EC;padding:2px">
+<div><b>🔔 Notif Pembayaran — THRIFTORIA</b><br><span id="notifText" style="font-size:13px;color:#6B5A4A">Order dibuat, silakan bayar QRIS di bawah.</span></div>
+</div><div class="card" id="box"><div class="skeleton skel-img"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:60%"></div><p style="text-align:center;color:#7A6A5E">Memuat QRIS... (skeleton)</p></div><p><a href="/" style="color:#2B2118">Kembali ke toko</a></p></div>
+<script>
+let oid = new URLSearchParams(location.search).get('order_id');
+async function load(){
+  // FIX24: load() lama CRASH di sini. Kalau /api/order 404, d.total = undefined, lalu d.total.toLocaleString() melempar TypeError, box tidak pernah diganti, skeleton muter terus. Sekarang: cek error dulu TANPA pakai d.total, pakai fallback localStorage, kasih tombol Coba Lagi.
+  let box=document.getElementById('box');
+  try{
+    let r=await fetch('/api/order/'+oid);
+    let d=await r.json();
+    if(d.error || !r.ok) throw new Error(d.error||('Server '+r.status));
+    renderOrder(d, '');
+  }catch(e){
+    // Fallback: pakai snapshot yang disimpan di HP pas checkout (index.html). Ini yang nyelametin kalau Vercel /tmp ke-reset / pindah instance.
+    try{
+      let s=JSON.parse(localStorage.getItem('thriftoria_last_order')||'null');
+      if(s && s.order_id===oid){
+        let d={order_id:s.order_id, total:s.total, subtotal:s.subtotal, ongkir:s.ongkir, kurir:s.kurir, nama_pembeli:s.nama, no_hp:s.no_hp, alamat:s.alamat, kota:s.kota, orders:s.orders, status:s.status};
+        renderOrder(d, '⚠️ Server Vercel ke-reset, QRIS ditampilkan dari data di HP kamu. Totalnya tetap sama, jangan bayar 2x.');
+        return;
+      }
+    }catch(_){}
+    document.getElementById('notifText').innerText='Gagal memuat order '+oid+': '+e.message;
+    box.innerHTML=`<p><b>Order ${oid} tidak ketemu di server.</b></p><p style="font-size:13px;color:#6B5A4A">Ini biasanya karena Vercel serverless me-reset data /tmp saat pindah instance, atau kamu buka halaman ini setelah Redeploy. Stok di toko mungkin belum terkunci.</p><p style="font-size:13px">Error: ${e.message}</p><button class="btn" onclick="load()">COBA LAGI</button><button class="btn-glass" style="margin-top:10px" onclick="location.href='/'">KEMBALI KE TOKO & CHECKOUT ULANG</button>`;
+  }
+}
+function renderOrder(d, warn){
+  let items=(d.orders||[]).map(o=>`<p>${o.produk_nama} x ${o.qty} = Rp ${(o.total||0).toLocaleString('id-ID')} • ${o.status}</p>`).join('');
+  let qrisUrl='https://api.qrserver.com/v1/create-qr-code/?size=260x260&data='+encodeURIComponent('THRIFTORIA|'+oid+'|TOTAL:'+d.total);
+  document.getElementById('notifText').innerText='Order '+oid+' dibuat. Total Rp '+(d.total||0).toLocaleString('id-ID')+' • Status: '+d.status+' • Bayar QRIS di bawah, jangan bayar 2x.';
+  document.getElementById('box').innerHTML=`${warn?`<p style="background:#FFF3D6;border:1px solid #E8C97A;padding:10px;border-radius:12px;font-size:13px">${warn}</p>`:''}<p><b>Order ID:</b> ${oid} <span style="background:#FFF1E6;padding:4px 8px;border-radius:8px;font-weight:800">TERKUNCI</span></p><p><b>Status:</b> ${d.status}</p><hr>${items}<hr><p><b>Penerima:</b> ${d.nama_pembeli||'-'} • ${d.no_hp||''}</p><p><b>Alamat:</b> ${d.alamat||'-'}, ${d.kota||''}</p><p><b>Kurir:</b> ${d.kurir||'-'}</p><hr><p>Subtotal barang: Rp ${((d.subtotal ?? d.total)||0).toLocaleString('id-ID')}<br>Ongkir: Rp ${((d.ongkir||0)).toLocaleString('id-ID')}</p><p><b>Total harus pas (barang + ongkir):</b></p><h2>Rp ${(d.total||0).toLocaleString('id-ID')}</h2><p>Sisa kunci stok: <span class="timer" id="timer">10:00</span></p><div class="qris"><img src="${qrisUrl}" style="width:240px;height:240px"><p><b>SCAN QRIS INI</b></p><p style="font-size:12px;color:#7A6A5E">QR ini hanya untuk order ${oid}. Jangan bayar 2x.</p></div><p style="font-size:13px;color:#7A6A5E">Buka GoPay / OVO / DANA / OCTO Mobile - Scan QRIS - Bayar pas - Klik Saya Sudah Bayar.</p><button class="btn" onclick="confirmPay()">SAYA SUDAH BAYAR</button><button class="btn-glass" style="margin-top:10px" onclick="cekStatus()">CEK STATUS</button><p id="msg"></p>`;
+}
+
+let seconds=600;
+setInterval(()=>{ if(seconds<=0) return; seconds--; let m=Math.floor(seconds/60), s=seconds%60; let el=document.getElementById('timer'); if(el) el.innerText=m+':'+String(s).padStart(2,'0'); },1000);
+async function confirmPay(){
+  // FIX25: fungsi ini HILANG di Fix24 (kehapus regex), makanya klik SAYA SUDAH BAYAR diam saja: onclick manggil fungsi yang tidak ada -> ReferenceError, tidak ada pesan apa-apa.
+  let msg=document.getElementById('msg'); let btn=document.querySelector('.btn');
+  if(msg) msg.innerHTML='<b>Memproses konfirmasi...</b>';
+  if(btn){ btn.innerText='MEMPROSES...'; btn.disabled=true; }
+  try{
+    let r=await fetch('/api/confirm-payment/'+oid,{method:'POST'});
+    let d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||('Server '+r.status));
+    // sukses di server: update snapshot HP juga
+    try{ let s=JSON.parse(localStorage.getItem('thriftoria_last_order')||'null'); if(s && s.order_id===oid){ s.status='Lunas'; (s.orders||[]).forEach(o=>o.status='Lunas'); localStorage.setItem('thriftoria_last_order', JSON.stringify(s)); } }catch(_){}
+    if(msg) msg.innerHTML='<b style="color:#2E7D32">Pembayaran dikonfirmasi! Mengalihkan ke Nota...</b>';
+    setTimeout(()=>{ window.location.href='/nota?order_id='+oid; }, 800);
+  }catch(e){
+    // Fallback serverless: server 404 karena /tmp ke-reset -> tetap anggap dibayar dari sisi HP, lanjut ke Nota dari snapshot. Admin konfirmasi ulang via WA.
+    if(msg) msg.innerHTML='<b style="color:#B42318">Server tidak ketemu order ini ('+e.message+'). Tetap lanjut ke Nota dari data HP kamu, lalu konfirmasi ke admin via WA ya.</b>';
+    try{ let s=JSON.parse(localStorage.getItem('thriftoria_last_order')||'null'); if(s && s.order_id===oid){ s.status='Lunas'; (s.orders||[]).forEach(o=>o.status='Lunas'); localStorage.setItem('thriftoria_last_order', JSON.stringify(s)); } }catch(_){}
+    setTimeout(()=>{ window.location.href='/nota?order_id='+oid; }, 1200);
+  }
+}
+async function cekStatus(){
+  // FIX25: fungsi ini juga HILANG di Fix24, makanya CEK STATUS diam.
+  let msg=document.getElementById('msg');
+  if(msg) msg.innerHTML='<b>Mengecek status...</b>';
+  try{
+    let r=await fetch('/api/order/'+oid); let d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||('Server '+r.status));
+    if(d.status==='Lunas'){ window.location.href='/nota?order_id='+oid; }
+    else { if(msg) msg.innerHTML='<b>Belum lunas, masih Menunggu Pembayaran. Coba lagi setelah kamu bayar di m-banking.</b>'; }
+  }catch(e){
+    // Fallback: cek snapshot HP
+    try{ let s=JSON.parse(localStorage.getItem('thriftoria_last_order')||'null'); if(s && s.order_id===oid && s.status==='Lunas'){ window.location.href='/nota?order_id='+oid; return; } }catch(_){}
+    if(msg) msg.innerHTML='<b>Belum bisa cek ke server ('+e.message+'). Kalau kamu sudah bayar, klik SAYA SUDAH BAYAR saja.</b>';
+  }
+}
+
+load();
+</script></body></html>
