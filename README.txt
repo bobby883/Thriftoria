@@ -1,25 +1,16 @@
-THRIFTORIA FIX25 - Tombol SAYA SUDAH BAYAR & CEK STATUS Tidak Respon
+THRIFTORIA FIX26 - 1 Produk Maksimal 10 Gambar
 
-SCREENSHOT: QRIS sudah muncul (THR-22KYHF), tapi klik SAYA SUDAH BAYAR / CEK STATUS diam saja, tidak ada pesan, tidak pindah halaman.
+YANG DITAMBAH:
+1. ADMIN > Tambah Barang: input foto sekarang bisa pilih banyak sekaligus (multiple). Counter "0 / 10 foto". Kalau pilih >10, alert + hanya 10 pertama dipakai. Preview grid 10 thumbnail. Foto ke-1 otomatis jadi foto UTAMA (cover).
+2. ADMIN > Edit produk: tampil semua foto produk (maks 10) sebagai thumbnail. Foto UTAMA ada badge oranye. Di bawah tiap foto ada checkbox kecil: centang = hapus foto itu saat Simpan. Ada checkbox "Ganti semua foto lama dengan foto baru" - kalau dicentang, foto lama dibuang semua, diganti foto baru. Kalau tidak dicentang, foto baru DITAMBAH ke foto lama (sampai total 10).
+3. TOKO (halaman depan): kalau produk punya >1 foto, tampil galeri thumbnail di bawah foto utama. Klik thumbnail -> foto utama ganti. Ada tulisan "X foto - klik untuk lihat".
+4. BACKEND: produk sekarang simpan "gambar_list" (list, maks 10) + "gambar" (foto pertama, buat kompatibilitas). Produk LAMA yang cuma 1 foto tetap jalan: gambar_list_for() ubah 1 foto jadi list 1 item. Tidak perlu upload ulang.
+5. Bonus fix: di Edit produk, deskripsi sekarang selalu tersimpan (sebelumnya hanya tersimpan kalau upload foto baru).
 
-PENYEBAB (ketemu di kode Fix24):
-- Fungsi confirmPay() dan cekStatus() HILANG dari checkout.html. Kehapus waktu Fix24 rewrite load() pakai regex.
-- Tombolnya masih onclick="confirmPay()" / onclick="cekStatus()", tapi fungsinya tidak ada -> browser lempar ReferenceError diam-diam, klik tidak ngapa-ngapain.
-- Bonus bug: templates/nota.html TIDAK ADA filenya. Jadi kalaupun confirmPay jalan, redirect ke /nota akan 500 TemplateNotFound.
-
-YANG DIPERBAIKI FIX25:
-1. confirmPay() ditulis ulang lengkap:
-   - Tampilkan "Memproses konfirmasi...", tombol jadi MEMPROSES... + disabled biar tidak diklik 2x
-   - POST /api/confirm-payment/<oid> -> kalau sukses, update snapshot HP jadi Lunas, tampilkan "Pembayaran dikonfirmasi!" -> pindah ke /nota
-   - Kalau server 404 (Vercel /tmp ke-reset): tampilkan peringatan + tetap lanjut ke Nota dari snapshot HP, suruh konfirmasi ke admin via WA. Tidak diam lagi.
-2. cekStatus() ditulis ulang lengkap:
-   - GET /api/order/<oid> -> kalau Lunas pindah ke Nota, kalau masih Menunggu tampilkan "Belum lunas..."
-   - Kalau server error, cek snapshot HP, kalau snapshot sudah Lunas pindah ke Nota, kalau belum suruh klik SAYA SUDAH BAYAR.
-3. Timer 10:00 dikembalikan (juga ikut kehapus di Fix24).
-4. nota.html DIBUAT BARU (sebelumnya tidak ada):
-   - Kalau server punya order, tampilkan nota dari server
-   - Kalau server tidak punya (ke-reset), tampilkan nota dari snapshot HP + banner kuning "Screenshot nota ini + kirim ke admin via WA"
-   - Kalau dua-duanya tidak ada, tampilkan pesan jelas + tombol Kembali ke Toko, bukan halaman 500 kosong.
+BATASAN (jujur): tiap foto dikompres ke max 800px JPEG 0.8 di browser sebelum dikirim, biar 10 foto tidak bikin /tmp Vercel jebol. Total per produk kira-kira 1-2 MB.
 
 CARA UPDATE: upload SEMUA isi zip, git add . ; commit ; push ; Vercel Redeploy ; Ctrl+Shift+R
-CARA TES: Checkout lagi -> QRIS muncul -> klik CEK STATUS -> harus muncul "Belum lunas..." (bukan diam). Bayar (simulasi) -> klik SAYA SUDAH BAYAR -> harus muncul "Pembayaran dikonfirmasi!" -> pindah ke Nota.
+CARA TES:
+- Admin > Tambah Barang > pilih 3-5 foto sekaligus > lihat preview + counter > Simpan > cek di toko: foto utama + thumbnail bisa diklik.
+- Admin > Edit produk itu > centang 1 foto > Simpan > foto itu hilang.
+- Coba pilih 11 foto > harus muncul alert maksimal 10.

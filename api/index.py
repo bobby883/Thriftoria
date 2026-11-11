@@ -60,6 +60,34 @@ def simpan_gambar(file_storage):
     except:
         return ""
 
+
+def gambar_list_for(p):
+    # Produk lama: cuma punya "gambar" (1 string). Produk baru: "gambar_list" (list, maks 10). Selalu kembalikan list.
+    lst = p.get("gambar_list") or []
+    if lst: return [x for x in lst if x][:10]
+    g = p.get("gambar","")
+    return [g] if g else []
+def kumpulkan_gambar(req):
+    # Kumpulkan dari: file multiple (name=gambar), file multiple (name=gambar_list), base64 list JSON, base64 tunggal. Maks 10, urutan dipertahankan.
+    out=[]
+    for f in list(req.files.getlist("gambar")) + list(req.files.getlist("gambar_list")):
+        g=simpan_gambar(f)
+        if g: out.append(g)
+    raw_list = req.form.get("gambar_base64_list","") or ""
+    if raw_list:
+        try:
+            arr=json.loads(raw_list) if raw_list.strip().startswith("[") else [raw_list]
+            for x in arr:
+                if isinstance(x,str) and x.startswith("data:image"): out.append(x[:500000])
+        except: pass
+    single = req.form.get("gambar_base64","") or ""
+    if single.startswith("data:image") and single not in out: out.append(single[:500000])
+    # buang duplikat persis, potong 10
+    seen=set(); uniq=[]
+    for x in out:
+        if x not in seen: seen.add(x); uniq.append(x)
+    return uniq[:10]
+
 def next_id(items):
     return max([x["id"] for x in items], default=0) + 1
 
@@ -198,6 +226,7 @@ def api_ongkir():
 @app.route("/")
 def index():
     data = load_data()
+    for _p in data["products"]: _p["gambar_list"]=gambar_list_for(_p)
     kategori = request.args.get("kategori","")
     lengan = request.args.get("lengan","")
     products = [p for p in data["products"] if p["stok"] > 0]  # STOK 0 = HILANG DARI WEB
@@ -344,6 +373,7 @@ def login_required(f):
 @login_required
 def admin_dashboard():
     data = load_data()
+    for _p in data["products"]: _p["gambar_list"]=gambar_list_for(_p)
     total = sum(o["total"] for o in data["orders"] if o["tipe"]=="penjualan" and o.get("status")=="Lunas")
     return render_template("admin.html", products=data["products"], orders=data["orders"], total_penjualan=total, total_transaksi=len(data["orders"]))
 
@@ -351,11 +381,10 @@ def admin_dashboard():
 @login_required
 def tambah():
     data=load_data()
-    gambar = simpan_gambar(request.files.get("gambar"))
-    # kalau tidak upload file, tapi kirim base64 dari HP (form gambar_base64)
-    if not gambar:
-        gambar = request.form.get("gambar_base64","")[:500000]
-    data["products"].append({"id":next_id(data["products"]), "nama":request.form["nama"], "kategori":request.form["kategori"], "lengan":request.form["lengan"], "harga":int(request.form["harga"]), "stok":int(request.form["stok"]), "deskripsi":request.form.get("deskripsi",""), "gambar":gambar, "grade":request.form.get("grade","A"), "gender":request.form.get("gender","Unisex"), "ukuran":request.form.get("ukuran","All Size")})
+    gl = kumpulkan_gambar(request)
+    # fallback lama: 1 file name=gambar sudah ditangani kumpulkan_gambar
+    gambar = gl[0] if gl else ""
+    data["products"].append({"id":next_id(data["products"]), "nama":request.form["nama"], "kategori":request.form["kategori"], "lengan":request.form["lengan"], "harga":int(request.form["harga"]), "stok":int(request.form["stok"]), "deskripsi":request.form.get("deskripsi",""), "gambar":gambar, "gambar_list":gl, "grade":request.form.get("grade","A"), "gender":request.form.get("gender","Unisex"), "ukuran":request.form.get("ukuran","All Size")})
     save_data(data); return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/edit/<int:pid>", methods=["POST"])
@@ -364,10 +393,25 @@ def edit(pid):
     data=load_data()
     for p in data["products"]:
         if p["id"]==pid:
-            p["nama"]=request.form["nama"]; p["kategori"]=request.form["kategori"]; p["lengan"]=request.form["lengan"]; p["harga"]=int(request.form["harga"]); p["stok"]=int(request.form["stok"]); p["grade"]=request.form.get("grade", p.get("grade","A")); p["gender"]=request.form.get("gender", p.get("gender","Unisex")); p["ukuran"]=request.form.get("ukuran", p.get("ukuran","All Size"))
-            _g = simpan_gambar(request.files.get("gambar"))
-            if _g: p["gambar"]=_g
-            elif request.form.get("gambar_base64"): p["gambar"]=request.form.get("gambar_base64","")[:500000]; p["deskripsi"]=request.form.get("deskripsi","")
+            p["nama"]=request.form["nama"]; p["kategori"]=request.form["kategori"]; p["lengan"]=request.form["lengan"]; p["harga"]=int(request.form["harga"]); p["stok"]=int(request.form["stok"]); p["grade"]=request.form.get("grade", p.get("grade","A")); p["gender"]=request.form.get("gender", p.get("gender","Unisex")); p["ukuran"]=request.form.get("ukuran", p.get("ukuran","All Size")); p["deskripsi"]=request.form.get("deskripsi", p.get("deskripsi",""))
+            existing = gambar_list_for(p)
+            # hapus yang dicentang
+            hapus = request.form.getlist("hapus_gambar")
+            if hapus:
+                try: idxs={int(x) for x in hapus}
+                except: idxs=set()
+                existing=[g for i,g in enumerate(existing) if i not in idxs]
+            baru = kumpulkan_gambar(request)
+            if request.form.get("ganti_semua"):
+                gabung = baru
+            else:
+                gabung = (existing + baru)[:10]
+            if gabung:
+                p["gambar_list"]=gabung; p["gambar"]=gabung[0]
+            elif not existing:
+                p["gambar_list"]=[]; p["gambar"]=""
+            else:
+                p["gambar_list"]=existing; p["gambar"]=existing[0]
     save_data(data); return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/hapus/<int:pid>")
