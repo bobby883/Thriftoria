@@ -31,9 +31,41 @@ DATA_AWAL = {
 # Di Vercel serverless, simpan di file /tmp agar tetap ada selama instance hidup
 DATA_FILE = "/tmp/thriftoria_data.json"  # Vercel serverless, data reset kalau redeploy
 
+def _supabase_cfg():
+    url=(os.environ.get("SUPABASE_URL") or "").rstrip("/")
+    key=os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_ANON_KEY") or ""
+    table=os.environ.get("SUPABASE_TABLE") or "thriftoria_data"
+    return url, key, table
+def _supabase_get():
+    # Ambil data dari Supabase (database permanen). Return None kalau belum disetting / gagal.
+    url,key,table=_supabase_cfg()
+    if not url or not key: return None
+    try:
+        import urllib.request, json as _j
+        req=urllib.request.Request(f"{url}/rest/v1/{table}?id=eq.1&select=data", headers={"apikey":key,"Authorization":f"Bearer {key}","Accept":"application/json"})
+        with urllib.request.urlopen(req, timeout=5) as r:
+            rows=_j.loads(r.read().decode())
+        if rows and rows[0].get("data"): return rows[0]["data"]
+        return None
+    except Exception as e:
+        print("Supabase GET gagal:", e); return None
+def _supabase_save(data):
+    url,key,table=_supabase_cfg()
+    if not url or not key: return False
+    try:
+        import urllib.request, json as _j
+        body=_j.dumps({"id":1,"data":data}).encode()
+        # Upsert: kalau row id=1 belum ada -> insert, kalau sudah ada -> update. Pakai merge-duplicates.
+        req=urllib.request.Request(f"{url}/rest/v1/{table}?on_conflict=id", data=body, method="POST", headers={"apikey":key,"Authorization":f"Bearer {key}","Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"})
+        with urllib.request.urlopen(req, timeout=8) as r: r.read()
+        return True
+    except Exception as e:
+        print("Supabase SAVE gagal:", e); return False
 def load_data():
-    # pastikan produk lama tetap punya field gambar
-    _d = None
+    # FIX29: data JANGAN cuma di /tmp. /tmp Vercel itu sementara: tiap pindah instance / cold start / Redeploy, isinya hilang, produk baru balik ke DATA_AWAL.
+    # Urutan: 1) Supabase (permanen, kalau sudah disetting) 2) /tmp (cache cepat) 3) DATA_AWAL
+    d=_supabase_get()
+    if isinstance(d, dict) and "products" in d: return d
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE) as f: return json.load(f)
@@ -41,9 +73,13 @@ def load_data():
     return deepcopy(DATA_AWAL)
 
 def save_data(data):
+    ok=False
+    try: ok=_supabase_save(data)
+    except Exception as e: print("save supabase error", e)
     try:
         with open(DATA_FILE, "w") as f: json.dump(data, f)
-    except: pass
+    except Exception as e: print("save tmp error", e)
+    return ok
 
 
 def simpan_gambar(file_storage):
@@ -370,6 +406,11 @@ def api_confirm(oid):
     save_data(data)
     return jsonify({"order_id":oid, "status":"Lunas"})
 
+@app.route("/api/storage-status")
+def storage_status():
+    url,key,table=_supabase_cfg()
+    d=_supabase_get()
+    return jsonify({"supabase_disetting": bool(url and key), "supabase_url": (url[:30]+"..." if url else ""), "supabase_table": table, "supabase_ada_data": bool(d and d.get("products") is not None), "jumlah_produk_supabase": len(d.get("products",[])) if d else 0, "peringatan": "Kalau supabase_disetting=false, data HANYA di /tmp Vercel -> produk baru HILANG pas refresh / pindah instance / Redeploy. Ikuti README Fix29 untuk setting Supabase (gratis, 5 menit)."})
 # ===== ADMIN =====
 @app.route("/login", methods=["GET","POST"])
 @app.route("/admin-login", methods=["GET","POST"])
