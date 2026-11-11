@@ -1,34 +1,7 @@
-THRIFTORIA - VERCEL FIX 404
+THRIFTORIA FIX3 - Warna nyaman + Admin bisa diklik + Analyst di dalam Admin
 
-KENAPA TADI 404?
-- vercel.json lama pakai "builds" + "routes" -> Vercel terbaru nolak, jadi route ke /api/index.py tidak dibuat.
-- Sekarang sudah diganti ke "rewrites" saja, ini format resmi Vercel sekarang.
-- Path templates juga sudah dibenerin pakai absolute path.
+1. Warna: bg cream #FFF6EC, teks coklat tua #2B2118 (bukan hitam pekat), aksen terracotta + sage. Nyaman dilihat lama.
+2. Admin fix: vercel.json sekarang kirim ?__path__=$1, middleware baca itu. /admin -> admin, /analyst -> analyst, / -> toko. Tidak balik ke toko lagi.
+3. Analyst: link Data Analyst DIHAPUS dari halaman toko. Hanya ada di dalam /admin. /analyst tetap butuh login admin.
 
-CARA DEPLOY ULANG YANG BENAR:
-1. Hapus deployment lama di Vercel (thriftoria-lilac) atau buat project baru.
-2. Upload file zip FIX ini ke GitHub (timpa semua file lama, pastikan vercel.json yang baru ke-upload).
-   - Cara cek: buka vercel.json di GitHub, harus isinya cuma "rewrites", BUKAN "builds".
-3. Di Vercel -> Deployments -> Redeploy -> pilih "Redeploy with existing build cache" dimatikan (Clear cache).
-4. Tunggu sampai Status: Ready.
-5. Buka: https://thriftoria-lilac.vercel.app/  -> harusnya langsung muncul THRIFTORIA.STORE
-
-KALAU MASIH 404:
-- Cek di Vercel -> Deployments -> Logs, cari "Build Completed"
-- Pastikan di GitHub ada folder: api/index.py (bukan api/index.py di dalam folder lain)
-- Pastikan ada file: vercel.json, requirements.txt di ROOT (sejajar api/, bukan di dalam api/)
-- Jangan deploy dari folder templates/, deploy dari ROOT.
-
-URL:
-- Toko: /
-- Admin: /login (admin / thriftoria123)
-- Analyst: /analyst
-- API: /api/data-analyst
-
-STRUKTUR YANG BENAR DI GITHUB:
-thriftoria/
-  api/index.py
-  templates/*.html
-  vercel.json
-  requirements.txt
-  README.txt
+Deploy: git add . | git commit -m 'fix3 warna admin analyst' | git push | Vercel Redeploy tanpa cache

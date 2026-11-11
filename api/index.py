@@ -159,32 +159,32 @@ def api_analyst():
     return jsonify({"products":data["products"], "orders":data["orders"], "updated_at":datetime.now().isoformat()})
 
 
-# ===== FIX VERCEL ROUTING =====
-# Vercel ngirim PATH_INFO = /api/index.py, Flask nyari route "/" -> 404
-# Middleware ini ubah /api/index.py jadi / biar Flask ketemu route-nya
+# ===== FIX VERCEL ROUTING v3 =====
+# Vercel rewrite: /(.*) -> /api/index.py?__path__=$1
+# Jadi Flask baca __path__ untuk tau route asli: admin, analyst, beli, dll
+from urllib.parse import parse_qs
 class VercelFixMiddleware:
     def __init__(self, app):
         self.app = app
     def __call__(self, environ, start_response):
-        path = environ.get("PATH_INFO", "")
-        # /api/index.py -> /
-        # /api/index.py/admin -> /admin
-        # /api/index.py/api/data-analyst -> /api/data-analyst
-        if path.startswith("/api/index.py"):
-            new_path = path[len("/api/index.py"):] or "/"
-            environ["PATH_INFO"] = new_path
-            environ["SCRIPT_NAME"] = "/api/index.py"
-        elif path.startswith("/api/") and path not in ["/api/data-analyst"]:
-            # Jangan ubah /api/data-analyst, itu route Flask asli
-            pass
+        qs = environ.get("QUERY_STRING", "")
+        params = parse_qs(qs)
+        p = params.get("__path__", [None])[0]
+        if p is not None:
+            # p = "admin" / "analyst" / "" / "beli/1"
+            environ["PATH_INFO"] = "/" + p if p else "/"
+            # buang __path__ dari query biar Flask tidak bingung
+            rest = "&".join([f"{k}={v[0]}" for k,v in params.items() if k != "__path__"])
+            environ["QUERY_STRING"] = rest
+        else:
+            # Fallback kalau dipanggil langsung /api/index.py
+            path = environ.get("PATH_INFO", "")
+            if path.startswith("/api/index.py"):
+                environ["PATH_INFO"] = path[len("/api/index.py"):] or "/"
         return self.app(environ, start_response)
 
 app.wsgi_app = VercelFixMiddleware(app.wsgi_app)
 
 # Route cadangan kalau Vercel tetap manggil /api/index.py langsung
-@app.route("/api/index.py")
-@app.route("/api/index.py/")
-def _vercel_index_alias():
-    return index()
 
 # Vercel butuh variable 'app' di atas, jangan dihapus
