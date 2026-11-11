@@ -26,8 +26,10 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Inter,system-ui,sans-
   {% if order_id %}<p><b>Order ID:</b> {{order_id}}</p>{% endif %}
   <p><b>Status:</b> <span style="background:#EAF3EA;padding:4px 10px;border-radius:8px">{{status}}</span></p>
   {% if nama_pembeli %}<p><b>Pembeli:</b> {{nama_pembeli}}</p>{% endif %}
+  {% if no_hp %}<p><b>No HP / WA:</b> {{no_hp}}</p>{% endif %}
+  {% if alamat %}<div style="background:#FFF6EC;border:1px solid #EDE0D0;border-radius:12px;padding:12px;margin:10px 0"><b>Alamat Pengiriman</b><br>{{alamat}}<br>{% if kota %}{{kota}}{% endif %}<br>{% if kurir %}Kurir: {{kurir}}{% endif %}</div>{% endif %}
   {% if orders %}
-  <table>{% for o in orders %}<tr><td>{{o.produk_nama}} x {{o.qty}}</td><td style="text-align:right">Rp {{ "{:,}".format(o.total) }}</td></tr>{% endfor %}<tr><td><b>Total</b></td><td style="text-align:right"><b>Rp {{ "{:,}".format(total) }}</b></td></tr></table>
+  <table>{% for o in orders %}<tr><td>{{o.produk_nama}} x {{o.qty}}</td><td style="text-align:right">Rp {{ "{:,}".format(o.total) }}</td></tr>{% endfor %}{% if subtotal %}<tr><td>Subtotal Barang</td><td style="text-align:right">Rp {{ "{:,}".format(subtotal) }}</td></tr><tr><td>Ongkir ({{kurir}})</td><td style="text-align:right">Rp {{ "{:,}".format(ongkir) }}</td></tr>{% endif %}<tr><td><b>Total Bayar</b></td><td style="text-align:right"><b>Rp {{ "{:,}".format(total) }}</b></td></tr></table>
   {% else %}
   <p>Produk: {{produk}}</p><p>Qty: {{qty}}</p><p><b>Total: Rp {{total}}</b></p>
   {% endif %}

@@ -75,6 +75,21 @@ def logo_png():
         return send_file(p, mimetype="image/png")
     return "logo not found", 404
 
+# ===== ONGKIR =====
+# Harga ongkir flat per kurir (bisa diganti di admin nanti).
+# Ini hitungan sementara biar langsung jalan, tanpa API RajaOngkir.
+# Admin bisa ubah angka di sini kalau mau.
+ONGKIR_TABLE = {
+  "JNE Reguler": 12000,
+  "JNE YES": 22000,
+  "J&T Express": 11000,
+  "SiCepat Reg": 10000,
+  "SiCepat BEST": 9000,
+  "Pos Indonesia": 9000,
+  "GoSend Same Day (Medan)": 15000,
+  "Ambil di Toko (Gratis)": 0,
+}
+
 # ===== TOKO =====
 @app.route("/")
 def index():
@@ -110,8 +125,10 @@ def nota():
         data = load_data()
         orders = [o for o in data["orders"] if o.get("order_id")==oid]
         if orders:
-            total = sum(o["total"] for o in orders)
-            return render_template("nota.html", order_id=oid, orders=orders, total=total, status=orders[0].get("status","Lunas"), produk=orders[0].get("produk_nama",""), qty=sum(o.get("qty",0) for o in orders), nama_pembeli=orders[0].get("nama_pembeli",""))
+            subtotal = sum(o["total"] for o in orders)
+            ongkir = orders[0].get("ongkir",0)
+            total = subtotal + ongkir
+            return render_template("nota.html", order_id=oid, orders=orders, total=total, subtotal=subtotal, ongkir=ongkir, kurir=orders[0].get("kurir",""), no_hp=orders[0].get("no_hp",""), alamat=orders[0].get("alamat",""), kota=orders[0].get("kota",""), status=orders[0].get("status","Lunas"), produk=orders[0].get("produk_nama",""), qty=sum(o.get("qty",0) for o in orders), nama_pembeli=orders[0].get("nama_pembeli",""))
     return render_template("nota.html", produk=request.args.get("produk"), qty=request.args.get("qty"), total=request.args.get("total"), order_id="", orders=[], status="Lunas")
 
 
@@ -133,6 +150,11 @@ def api_checkout():
     except:
         return jsonify({"error":"JSON tidak valid"}), 400
     nama = body.get("nama","Pelanggan")
+    no_hp = body.get("no_hp","")
+    alamat = body.get("alamat","")
+    kota = body.get("kota","")
+    kurir = body.get("kurir","J&T Express")
+    ongkir = ONGKIR_TABLE.get(kurir, 11000)
     items = body.get("items",[])
     if not items:
         return jsonify({"error":"Keranjang kosong"}), 400
@@ -148,18 +170,19 @@ def api_checkout():
     # KUNCI STOK: langsung kurangi stok, barang terkunci untuk transaksi ini
     oid = buat_order_id()
     rincian = []
-    for it in items:
+    for idx_it, it in enumerate(items):
         p = next((x for x in data["products"] if x["id"]==int(it["id"])))
         qty = int(it["qty"])
         sub = p["harga"]*qty
         total += sub
         p["stok"] -= qty  # stok berkurang, kalau jadi 0 -> hilang dari web
         rincian.append({"nama":p["nama"],"qty":qty,"harga":p["harga"],"subtotal":sub})
-        data["orders"].append({"id":next_id(data["orders"]), "order_id":oid, "tanggal":datetime.now().strftime("%Y-%m-%d %H:%M"), "nama_pembeli":nama, "produk_nama":p["nama"], "qty":qty, "total":sub, "status":"Menunggu Pembayaran", "tipe":"penjualan"})
+        # ongkir hanya disimpan di baris pertama, biar tidak kehitung 2x pas di-sum
+        data["orders"].append({"id":next_id(data["orders"]), "order_id":oid, "tanggal":datetime.now().strftime("%Y-%m-%d %H:%M"), "nama_pembeli":nama, "no_hp":no_hp, "alamat":alamat, "kota":kota, "kurir":kurir, "ongkir": ongkir if idx_it==0 else 0, "produk_nama":p["nama"], "qty":qty, "total":sub, "status":"Menunggu Pembayaran", "tipe":"penjualan"})
     save_data(data)
-    # QRIS text: format untuk QRIS, 1 order_id = 1 pembayaran, nominal terkunci
-    qris_text = f"THRIFTORIA|{oid}|TOTAL:{total}|NAMA:{nama}"
-    return jsonify({"order_id":oid, "total":total, "rincian":rincian, "qris_text":qris_text, "status":"Menunggu Pembayaran", "locked":True, "message":"Stok terkunci 10 menit. Bayar sesuai nominal, jangan bayar 2x untuk order yang sama."})
+    total_bayar = total + ongkir
+    qris_text = f"THRIFTORIA|{oid}|TOTAL:{total_bayar}|NAMA:{nama}"
+    return jsonify({"order_id":oid, "total":total, "ongkir":ongkir, "total_bayar":total_bayar, "kurir":kurir, "rincian":rincian, "qris_text":qris_text, "status":"Menunggu Pembayaran", "locked":True, "message":"Stok terkunci 10 menit. Bayar sesuai nominal (barang + ongkir), jangan bayar 2x."})
 
 @app.route("/api/order/<oid>")
 def api_order(oid):
@@ -167,8 +190,10 @@ def api_order(oid):
     orders = [o for o in data["orders"] if o.get("order_id")==oid]
     if not orders:
         return jsonify({"error":"Order tidak ditemukan"}), 404
-    total = sum(o["total"] for o in orders)
-    return jsonify({"order_id":oid, "total":total, "orders":orders, "status":orders[0]["status"]})
+    subtotal = sum(o["total"] for o in orders)
+    ongkir = orders[0].get("ongkir", 0)
+    total_bayar = subtotal + ongkir
+    return jsonify({"order_id":oid, "total":total_bayar, "subtotal":subtotal, "ongkir":ongkir, "total_bayar":total_bayar, "kurir":orders[0].get("kurir",""), "nama_pembeli":orders[0].get("nama_pembeli",""), "no_hp":orders[0].get("no_hp",""), "alamat":orders[0].get("alamat",""), "kota":orders[0].get("kota",""), "orders":orders, "status":orders[0]["status"]})
 
 @app.route("/api/confirm-payment/<oid>", methods=["POST"])
 def api_confirm(oid):
