@@ -346,7 +346,7 @@ def login_required(f):
 @login_required
 def admin_dashboard():
     data = load_data()
-    total = sum(o["total"] for o in data["orders"] if o["tipe"]=="penjualan")
+    total = sum(o["total"] for o in data["orders"] if o["tipe"]=="penjualan" and o.get("status")=="Lunas")
     return render_template("admin.html", products=data["products"], orders=data["orders"], total_penjualan=total, total_transaksi=len(data["orders"]))
 
 @app.route("/admin/tambah", methods=["POST"])

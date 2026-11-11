@@ -1,32 +1,38 @@
-THRIFTORIA FIX21 - Fix Server Error 500 pas Checkout
+THRIFTORIA FIX22 - Data Analyst Salah / Minus 1.080.000
 
-BUG DI SCREENSHOT:
-- Frontend sudah benar (Nama tini, HP, Alamat Tanjung Gading, Kota Medan, J&T, Ongkir 11.000, Total 36.000)
-- Tapi klik Checkout -> popup "Checkout gagal: Server error" + tombol jadi "Memproses..."
-- Penyebab: di api/index.py, fungsi api_checkout pakai variabel kurir & ongkir SEBELUM didefinisikan.
-  Python langsung NameError -> Flask return 500 -> frontend tampilkan "Server error".
-  Ini yang bikin order Beanie Hat Rp 25.000 + Ongkir 11.000 = 36.000 gagal terus.
+YANG SALAH DI SCREENSHOT:
+- Total Penjualan Rp 120.000 (Kaos 70rb + Beanie 50rb) -> hitungannya BENAR
+- Total Pembelian Rp 1.200.000 -> ini DATA CONTOH / DUMMY, bukan transaksi asli kamu:
+  Di DATA_AWAL ada 2 nota contoh:
+  1. Budi - Kaos Oversize - Rp 70.000 - penjualan - Lunas
+  2. Supplier Jakarta - Hoodie 20 pcs - Rp 1.200.000 - pembelian / kulakan - Lunas
+  Jadi 120.000 - 1.200.000 = -1.080.000. Rumusnya benar, datanya yang contoh.
+- Total Transaksi 3 = 2 nota contoh + 1 order asli kamu.
+- Bug kedua: analyst lama hitung SEMUA status, termasuk Menunggu Pembayaran & Refund. Jadi order yang belum dibayar ikut kehitung jadi penjualan, padahal belum masuk uang.
 
-YANG DIPERBAIKI:
-1. api_checkout ditulis ulang total, urutannya benar:
-   - Baca body dulu
-   - Definisikan nama, no_hp, alamat, kota, kota_id, kurir, ongkir (int, default 0) SEBELUM dipakai
-   - Validasi stok, kunci stok, simpan order + pengiriman di setiap baris order (ongkir hanya di baris pertama)
-   - total_bayar = subtotal + ongkir, QRIS = total_bayar
-   - try/except: kalau masih error, return JSON {"error":"Server error: <pesan asli>"} 500, bukan 500 kosong, biar frontend bisa tampilkan pesan aslinya.
-2. api_order diperbaiki: return subtotal, ongkir, total_bayar, kurir, nama, no_hp, alamat, kota.
-3. Frontend: alert tampilkan pesan server asli, bukan cuma "Server error".
+YANG DIPERBAIKI FIX22:
+1. DATA_AWAL dibersihkan: "orders": [] - tidak ada lagi nota contoh Budi / Supplier 1,2jt.
+   Setelah redeploy + Reset Data di Admin, analyst mulai dari 0.
+2. Analyst sekarang HANYA hitung status Lunas:
+   - Penjualan = tipe penjualan + status Lunas
+   - Pembelian = tipe pembelian + status Lunas
+   - Menunggu Pembayaran / Belum Lunas / Refund TIDAK dihitung, cuma ditampilkan jumlahnya di kartu Total Transaksi.
+3. Tambah banner penjelasan cara baca angka di atas KPI.
+4. Admin Total Penjualan juga diubah jadi Lunas saja, biar konsisten dengan Analyst.
+5. File sampah dibersihkan (file _1, _2, dll dihapus) biar zip tidak bingung.
+
+CARA BERSIHKAN DATA LAMA DI VERCEL (PENTING):
+Setelah push Fix22 + Redeploy:
+1. Login Admin -> klik Reset Data (kalau ada) ATAU hapus manual 2 nota contoh di Admin > Nota:
+   - Hapus nota "Budi - Kaos 70.000"
+   - Hapus nota "Supplier Jakarta - Hoodie 1.200.000"
+2. Buka /analyst -> Refresh. Harusnya:
+   - Kalau belum ada penjualan Lunas asli: Penjualan Rp 0, Pembelian Rp 0, Untung Rp 0
+   - Kalau Beanie Hat 50rb sudah Lunas: Penjualan Rp 50.000, Pembelian Rp 0, Untung Rp 50.000
+3. Kalau masih muncul 1,2jt, berarti masih baca /tmp lama - Redeploy lagi tanpa cache + Ctrl+Shift+R.
 
 CARA UPDATE:
 git add .
-git commit -m "fix server error checkout kurir ongkir"
+git commit -m "fix analyst dummy data dan hitung lunas saja"
 git push
-Vercel -> Redeploy tanpa cache
-Browser -> Ctrl+Shift+R
-
-CARA TES:
-1. Tambah Beanie Hat ke keranjang
-2. Isi Nama tini, HP 0823..., Alamat Tanjung Gading, Kota Medan, Kurir J&T
-3. Ongkir muncul Rp 11.000, Total Rp 36.000
-4. Klik Checkout -> harusnya langsung pindah ke halaman QRIS, TIDAK ada popup Server error lagi
-5. Di QRIS, cek Pengiriman + Subtotal + Ongkir + Total Bayar harus sama
+Vercel -> Redeploy
