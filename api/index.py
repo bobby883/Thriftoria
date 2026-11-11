@@ -248,45 +248,52 @@ def checkout_page():
 
 @app.route("/api/checkout", methods=["POST"])
 def api_checkout():
-    # Body: {"nama":"Budi","items":[{"id":1,"qty":1}]}
     try:
-        body = request.get_json(force=True)
-    except:
-        return jsonify({"error":"JSON tidak valid"}), 400
-    nama = body.get("nama","Pelanggan")
-    items = body.get("items",[])
-    if not items:
-        return jsonify({"error":"Keranjang kosong"}), 400
-    # FIX20: JANGAN tolak checkout kalau ongkir 0 / kota kosong (biar tombol tidak mati).
-    # Kalau customer pakai versi lama (cache) atau ongkir gagal kehitung, tetap boleh checkout.
-    # Ongkir ditandai 0 = "Ongkir Konfirmasi WA", admin chat customer untuk ongkir aslinya.
-    # Ini yang bikin tombol Checkout kemarin kayak tidak respon: backend return 400 tapi frontend lama tidak tampilkan error.
-    if kurir != "Ambil di Toko (Gratis)" and ongkir <= 0:
-        ongkir = 0  # tetap lanjut, admin konfirmasi via WA
-    data = load_data()
-    total = 0
-    # Validasi stok dulu, kalau ada yang kurang -> gagal semua, tidak ada yang terpotong
-    for it in items:
-        p = next((x for x in data["products"] if x["id"]==int(it["id"])), None)
-        if not p:
-            return jsonify({"error":f"Produk id {it['id']} tidak ditemukan"}), 400
-        if p["stok"] < int(it["qty"]):
-            return jsonify({"error":f"Stok {p['nama']} tidak cukup. Sisa {p['stok']}"}), 400
-    # KUNCI STOK: langsung kurangi stok, barang terkunci untuk transaksi ini
-    oid = buat_order_id()
-    rincian = []
-    for it in items:
-        p = next((x for x in data["products"] if x["id"]==int(it["id"])))
-        qty = int(it["qty"])
-        sub = p["harga"]*qty
-        total += sub
-        p["stok"] -= qty  # stok berkurang, kalau jadi 0 -> hilang dari web
-        rincian.append({"nama":p["nama"],"qty":qty,"harga":p["harga"],"subtotal":sub})
-        data["orders"].append({"id":next_id(data["orders"]), "order_id":oid, "tanggal":datetime.now().strftime("%Y-%m-%d %H:%M"), "nama_pembeli":nama, "produk_nama":p["nama"], "qty":qty, "total":sub, "status":"Menunggu Pembayaran", "tipe":"penjualan"})
-    save_data(data)
-    # QRIS text: format untuk QRIS, 1 order_id = 1 pembayaran, nominal terkunci
-    qris_text = f"THRIFTORIA|{oid}|TOTAL:{total}|NAMA:{nama}"
-    return jsonify({"order_id":oid, "total":total, "rincian":rincian, "qris_text":qris_text, "status":"Menunggu Pembayaran", "locked":True, "message":"Stok terkunci 10 menit. Bayar sesuai nominal, jangan bayar 2x untuk order yang sama."})
+        try:
+            body = request.get_json(force=True)
+        except:
+            return jsonify({"error":"JSON tidak valid"}), 400
+        # FIX21: definisikan SEMUA field dulu, sebelum dipakai. Ini bug Fix20: kurir/ongkir dipakai sebelum didefinisikan -> NameError -> Server error 500.
+        nama = body.get("nama","Pelanggan") or "Pelanggan"
+        no_hp = body.get("no_hp","") or ""
+        alamat = body.get("alamat","") or ""
+        kota = body.get("kota","") or ""
+        kota_id = body.get("kota_id","") or ""
+        kurir = body.get("kurir","J&T Express") or "J&T Express"
+        try:
+            ongkir = int(body.get("ongkir", 0) or 0)
+        except:
+            ongkir = 0
+        items = body.get("items",[])
+        if not items:
+            return jsonify({"error":"Keranjang kosong"}), 400
+        # Ongkir 0 boleh lanjut, admin konfirmasi via WA. Jangan tolak, biar tombol tidak mati.
+        data = load_data()
+        total = 0
+        for it in items:
+            p = next((x for x in data["products"] if x["id"]==int(it["id"])), None)
+            if not p:
+                return jsonify({"error":f"Produk id {it['id']} tidak ditemukan"}), 400
+            if p["stok"] < int(it["qty"]):
+                return jsonify({"error":f"Stok {p['nama']} tidak cukup. Sisa {p['stok']}"}), 400
+        oid = buat_order_id()
+        rincian = []
+        for idx_it, it in enumerate(items):
+            p = next((x for x in data["products"] if x["id"]==int(it["id"])))
+            qty = int(it["qty"])
+            sub = p["harga"]*qty
+            total += sub
+            p["stok"] -= qty
+            rincian.append({"nama":p["nama"],"qty":qty,"harga":p["harga"],"subtotal":sub})
+            data["orders"].append({"id":next_id(data["orders"]), "order_id":oid, "tanggal":datetime.now().strftime("%Y-%m-%d %H:%M"), "nama_pembeli":nama, "no_hp":no_hp, "alamat":alamat, "kota":kota, "kota_id":kota_id, "kurir":kurir, "ongkir": ongkir if idx_it==0 else 0, "produk_nama":p["nama"], "qty":qty, "total":sub, "status":"Menunggu Pembayaran", "tipe":"penjualan"})
+        save_data(data)
+        total_bayar = total + ongkir
+        qris_text = f"THRIFTORIA|{oid}|TOTAL:{total_bayar}|NAMA:{nama}"
+        return jsonify({"order_id":oid, "total":total_bayar, "subtotal":total, "ongkir":ongkir, "total_bayar":total_bayar, "kurir":kurir, "rincian":rincian, "qris_text":qris_text, "status":"Menunggu Pembayaran", "locked":True, "message":"Stok terkunci. Bayar sesuai nominal (barang + ongkir)."})
+    except Exception as e:
+        # Jangan pernah return 500 kosong. Kasih pesan jelas biar frontend bisa tampilkan.
+        import traceback; traceback.print_exc()
+        return jsonify({"error":f"Server error: {str(e)}"}), 500
 
 @app.route("/api/order/<oid>")
 def api_order(oid):
@@ -294,8 +301,10 @@ def api_order(oid):
     orders = [o for o in data["orders"] if o.get("order_id")==oid]
     if not orders:
         return jsonify({"error":"Order tidak ditemukan"}), 404
-    total = sum(o["total"] for o in orders)
-    return jsonify({"order_id":oid, "total":total, "orders":orders, "status":orders[0]["status"]})
+    subtotal = sum(o["total"] for o in orders)
+    ongkir = orders[0].get("ongkir", 0) or 0
+    total_bayar = subtotal + ongkir
+    return jsonify({"order_id":oid, "total":total_bayar, "subtotal":subtotal, "ongkir":ongkir, "total_bayar":total_bayar, "kurir":orders[0].get("kurir",""), "nama_pembeli":orders[0].get("nama_pembeli",""), "no_hp":orders[0].get("no_hp",""), "alamat":orders[0].get("alamat",""), "kota":orders[0].get("kota",""), "orders":orders, "status":orders[0]["status"]})
 
 @app.route("/api/confirm-payment/<oid>", methods=["POST"])
 def api_confirm(oid):

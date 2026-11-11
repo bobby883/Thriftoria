@@ -1,0 +1,116 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THRIFTORIA STORE - CREAM GLASS</title><style>
+/* THRIFTORIA CREAM + IPHONE GLASS - lembut, bukan neon */
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Inter,system-ui,sans-serif;background:#FDF3E7;color:#2B2118;line-height:1.5}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(600px 300px at 10% 0%, rgba(255,220,180,.6), transparent 60%),radial-gradient(600px 300px at 90% 20%, rgba(220,235,220,.6), transparent 60%),radial-gradient(700px 400px at 50% 100%, rgba(255,240,220,.7), transparent 60%);pointer-events:none;z-index:0}
+.wrap{max-width:1120px;margin:auto;padding:18px 16px 80px;position:relative;z-index:1}
+/* TOPBAR GLASS IPHONE */
+.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.65);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.7);box-shadow:0 4px 20px rgba(43,33,24,.06);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;letter-spacing:1px;font-size:18px;color:#2B2118}
+.cartbtn{background:rgba(255,255,255,.75);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 16px rgba(43,33,24,.10), inset 0 1px 0 rgba(255,255,255,.9);color:#2B2118;padding:10px 14px;border-radius:14px;font-weight:800;cursor:pointer}
+/* HERO GLASS */
+.glass-hero{background:rgba(255,255,255,.60);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.85);box-shadow:0 10px 30px rgba(43,33,24,.08), inset 0 1px 0 rgba(255,255,255,.9);border-radius:24px;padding:22px}
+.glass-hero h1{margin:0;font-size:38px;color:#2B2118;letter-spacing:-.5px}
+/* CARD GLASS IPHONE */
+.glass-card{background:rgba(255,255,255,.68);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.9);box-shadow:0 8px 24px rgba(43,33,24,.07), inset 0 1px 0 rgba(255,255,255,.9);border-radius:20px;padding:16px;position:relative}
+.glass-card h3{margin:10px 0 6px;color:#2B2118} .price{font-size:19px;font-weight:900;color:#2B2118}
+.badge{display:inline-block;background:rgba(255,255,255,.85);border:1px solid rgba(43,33,24,.10);padding:5px 9px;border-radius:10px;font-size:11px;font-weight:800;letter-spacing:.5px;color:#6B4A2E}
+.badge.hot{background:#FFF1E6;color:#9A2E12;border-color:#FFD6C0} .badge.sage{background:#EAF3EA;color:#3E5A41;border-color:#D0E5D0}
+select,input{padding:10px 12px;background:rgba(255,255,255,.8);backdrop-filter:blur(12px);color:#2B2118;border:1px solid rgba(43,33,24,.12);border-radius:12px}
+/* ACTION BUTTON GLASS IPHONE - tombol kaca, bukan neon */
+.btn{background:rgba(43,33,24,.92);color:#fff;padding:11px 16px;border:1px solid rgba(255,255,255,.3);border-radius:14px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(43,33,24,.18), inset 0 1px 0 rgba(255,255,255,.25)}
+.btn-glass{background:rgba(255,255,255,.70);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(43,33,24,.10), inset 0 1px 0 rgba(255,255,255,1);color:#2B2118;padding:11px 16px;border-radius:14px;font-weight:800;cursor:pointer}
+.btn-sage{background:rgba(122,154,126,.92);color:#fff;padding:11px 16px;border:1px solid rgba(255,255,255,.4);border-radius:14px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(122,154,126,.25)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.filter{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+/* SKELETON - tetap kotak, warna cream */
+.skeleton{background:linear-gradient(90deg,#F0E2D2 25%,#FFF8F0 37%,#F0E2D2 63%);background-size:400% 100%;animation:skeletonLoad 1.2s infinite;border-radius:12px}
+@keyframes skeletonLoad{0%{background-position:100% 0}100%{background-position:0 0}}
+.skel-line{height:14px;margin:8px 0} .skel-title{height:20px;width:70%} .skel-img{height:150px;width:100%} .skel-btn{height:38px;width:100%}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:380px;max-width:92vw;background:rgba(255,250,242,.88);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-left:1px solid rgba(255,255,255,.9);box-shadow:-10px 0 40px rgba(43,33,24,.15);padding:20px;transform:translateX(100%);transition:.3s;z-index:50;overflow:auto} .drawer.open{transform:none} .overlay{position:fixed;inset:0;background:rgba(43,33,24,.25);backdrop-filter:blur(2px);display:none;z-index:40} .overlay.show{display:block}
+.cartrow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(43,33,24,.08);padding:10px 0} .qtybtn{width:30px;height:30px;background:rgba(255,255,255,.8);border:1px solid rgba(43,33,24,.15);border-radius:9px;cursor:pointer}
+.promo{background:rgba(255,255,255,.65);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.9);padding:12px 14px;border-radius:16px;font-weight:700;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;box-shadow:0 6px 18px rgba(43,33,24,.06)}
+
+/* ===== FIX HP - RESPONSIVE ===== */
+@media (max-width: 640px){
+  .wrap{padding:12px 12px 60px}
+  .topbar{flex-wrap:wrap;gap:8px;padding:10px 12px}
+  .topbar .logo{font-size:15px}
+  .topbar span{font-size:10px !important;letter-spacing:1px !important}
+  .cartbtn{padding:8px 10px;font-size:13px}
+  .glass-hero{padding:16px;border-radius:18px}
+  .glass-hero h1{font-size:26px !important;line-height:1.1;word-break:break-word}
+  .glass-hero p{font-size:13px}
+  .promo{flex-direction:column;gap:6px;font-size:13px;padding:10px 12px}
+  .filter{flex-direction:column}
+  .filter select, .filter input, .filter .btn{width:100%}
+  .grid{grid-template-columns:1fr 1fr;gap:10px} /* HP: 2 kolom biar muat banyak */
+  .glass-card{padding:12px;border-radius:16px}
+  .glass-card h3{font-size:15px}
+  .price{font-size:16px}
+  .glass-card img{height:140px !important}
+  .drawer{width:100%;max-width:100%}
+  .cartbtn{white-space:nowrap}
+}
+@media (max-width: 380px){
+  .grid{grid-template-columns:1fr} /* HP kecil banget: 1 kolom */
+  .glass-hero h1{font-size:22px !important}
+}
+
+</style></head><body>
+<div class="topbar"><div style="display:flex;align-items:center;gap:10px"><img src="/static/logo.png" alt="Thriftoria Logo" style="height:44px;width:auto;border-radius:10px;background:#FFF6EC;padding:2px"><div style="display:flex;flex-direction:column;line-height:1.2"><div class="logo">THRIFTORIA.STORE</div><span style="letter-spacing:1.5px;font-size:11px;color:#7A6A5E;font-weight:700">INDONESIA STREETWEAR</span></div></div><button class="cartbtn" onclick="toggleCart(true)">Keranjang &nbsp; <span id="cartCount">0</span></button></div>
+<div class="wrap">
+<div class="glass-hero" style="text-align:center"><img src="/static/logo.png" alt="Logo Thriftoria - T Gantungan" style="width:180px;max-width:60vw;height:auto;border-radius:16px;background:#FFF6EC;padding:8px;box-shadow:0 6px 20px rgba(43,33,24,.08)"><h1 style="margin-top:10px">THRIFTORIA.STORE</h1><p style="letter-spacing:1.5px;color:#7A6A5E;font-weight:700;font-size:13px">INDONESIA STREETWEAR • PRELOVED • THRIFT • VINTAGE</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span class="badge">100% PRELOVED</span><span class="badge sage">STOK REAL-TIME</span><span class="badge">BAYAR QRIS</span></div></div>
+<div class="glass-hero" style="margin-top:16px">
+<h2 style="margin:0 0 8px;font-size:20px">Tentang THRIFTORIA — Kenapa Toko Ini Berdiri?</h2>
+<p style="color:#6B5A4A;margin:0;line-height:1.7">
+<b>THRIFTORIA</b> berdiri dari hobi hunting baju bekas. Awalnya cuma iseng keliling thrift, nemu baju bagus tapi harganya nggak masuk akal kalau beli baru. Dari situ kepikiran: <i>"Kenapa baju sebagus ini harus dibuang, padahal masih layak banget dipakai?"</i><br><br>
+Jadi kita mulai kurasi satu-satu. Nggak semua baju bekas kita ambil. Yang kita jual cuma yang masih bagus, sudah dicuci, sudah dicek minusnya, dan sudah kita kasih grade jujur: <b>Grade A, B, atau C</b>. Kalau ada minus, kita tulis apa adanya di deskripsi, nggak ditutup-tutupin.<br><br>
+Misi kita simpel: <b>baju bagus nggak harus mahal, dan baju bekas bukan berarti baju jelek.</b> Buat anak muda Indonesia yang mau tampil streetwear, tapi tetap hemat dan tetap peduli bumi — karena tiap baju thrift yang kamu beli, berarti satu baju lagi yang nggak jadi sampah.
+</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<span class="badge">EST. 2025 • INDRAPURA, INDONESIA</span>
+<span class="badge sage">DIKURASI SATU-SATU</span>
+<span class="badge">GRADE JUJUR, NO TIPU-TIPU</span>
+</div>
+</div>
+<form class="filter" method="get"><select name="kategori"><option value="">Semua Kategori</option>{% for k in kategoris %}<option value="{{k}}" {% if kategori_filter==k %}selected{% endif %}>{{k}}</option>{% endfor %}</select><select name="lengan"><option value="">Semua Lengan</option>{% for l in lengans %}<option value="{{l}}" {% if lengan_filter==l %}selected{% endif %}>{{l}}</option>{% endfor %}</select><button class="btn" style="flex:1">Filter</button><a href="/" style="color:#2B2118;align-self:center">Reset</a></form>
+<div id="skeleton" class="grid">
+  <div class="glass-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+  <div class="glass-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+  <div class="glass-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+  <div class="glass-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+</div>
+<div class="grid" id="realGrid" style="display:none">{% for p in products %}<div class="glass-card">{% if p.stok==1 %}<span class="badge hot">SISA 1 - REBUTAN</span>{% elif p.stok<=3 %}<span class="badge">SISA {{p.stok}} AJA</span>{% else %}<span class="badge sage">{{p.kategori}} • {{p.lengan}}</span>{% endif %}{% if p.get("gambar") %}<img src="{{p.get("gambar")}}" style="width:100%;height:200px;object-fit:cover;border-radius:14px;background:#F0E2D2">{% else %}<div style="width:100%;height:200px;background:linear-gradient(135deg,#FCE8D8,#EAF3EA);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:48px">👕</div>{% endif %}<h3>{{p.nama}}</h3><p style="color:#7A6A5E;margin:0">{{p.deskripsi}}</p><p style="margin:6px 0;display:flex;gap:6px;flex-wrap:wrap"><span class="badge">Grade {{p.get("grade","A")}}</span><span class="badge sage">{{p.get("gender","Unisex")}}</span><span class="badge">Ukuran {{p.get("ukuran","All Size")}}</span><span class="badge">{{p.kategori}} • {{p.lengan}}</span></p><p class="price">Rp {{ "{:,}".format(p.harga) }} <span style="font-size:13px;color:#7A6A5E;font-weight:600">• Stok {{p.stok}}</span></p><div style="display:flex;gap:8px;align-items:center"><input type="number" id="qty-{{p.id}}" value="1" min="1" max="{{p.stok}}" style="width:70px"><button class="btn-glass" onclick="addToCart({{p.id}}, '{{p.nama}}', {{p.harga}}, {{p.stok}})">+ Keranjang</button></div></div>{% endfor %}</div>
+<p style="text-align:center;color:#7A6A5E;margin-top:30px">THRIFTORIA • Preloved, tapi tetap paling baru di mata kamu.</p></div>
+<div class="overlay" id="overlay" onclick="toggleCart(false)"></div>
+<div class="drawer" id="drawer"><h2>Keranjang</h2><p style="color:#7A6A5E">Stok belum terkunci sampai kamu klik Checkout + QRIS muncul.</p><div id="cartItems"></div><hr><h3 style="margin:16px 0 8px">Pengiriman</h3>
+<input id="buyerName" placeholder="Nama lengkap (wajib)" style="width:100%;margin-bottom:8px">
+<input id="buyerPhone" placeholder="No HP / WA (wajib) - contoh: 081234567890" style="width:100%;margin-bottom:8px">
+<textarea id="buyerAddress" placeholder="Alamat lengkap (wajib) - Jalan, No Rumah, Patokan, RT/RW" rows="3" style="width:100%;margin-bottom:8px;padding:10px 12px;border:1px solid rgba(43,33,24,.12);border-radius:12px;background:rgba(255,255,255,.8)"></textarea>
+<input id="buyerCity" placeholder="Kecamatan / Kota - contoh: Medan, Indrapura" style="width:100%;margin-bottom:8px">
+<label style="font-weight:800;font-size:13px">Pilih Kurir - Ongkir otomatis kehitung</label>
+<select id="kurirSelect" onchange="render()" style="width:100%;margin:6px 0 10px">
+<option value="J&T Express">J&T Express - Rp 11.000</option>
+<option value="SiCepat Reg">SiCepat Reg - Rp 10.000</option>
+<option value="SiCepat BEST">SiCepat BEST - Rp 9.000</option>
+<option value="JNE Reguler">JNE Reguler - Rp 12.000</option>
+<option value="JNE YES">JNE YES (Besok Sampai) - Rp 22.000</option>
+<option value="Pos Indonesia">Pos Indonesia - Rp 9.000</option>
+<option value="GoSend Same Day (Medan)">GoSend Same Day (Medan) - Rp 15.000</option>
+<option value="Ambil di Toko (Gratis)">Ambil di Toko - GRATIS</option>
+</select>
+<p>Subtotal Barang: Rp <span id="cartSubtotal">0</span><br>Ongkir (<span id="kurirLabel">J&T Express</span>): Rp <span id="cartOngkir">0</span><br><b>Total Bayar: Rp <span id="cartTotal">0</span></b></p><button class="btn" style="width:100%;padding:12px" onclick="checkout()">Checkout — Bayar QRIS</button><button onclick="toggleCart(false)" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,.7);border:1px solid rgba(43,33,24,.15);border-radius:12px;cursor:pointer">Tutup</button><p style="font-size:12px;color:#7A6A5E">Setelah Checkout, stok langsung dikunci. 1 order = 1 QRIS, jangan bayar 2x.</p></div>
+<script>
+setTimeout(()=>{document.getElementById('skeleton').style.display='none';document.getElementById('realGrid').style.display='grid';}, 900);
+let cart = JSON.parse(localStorage.getItem('thriftoria_cart')||'[]');
+function save(){localStorage.setItem('thriftoria_cart', JSON.stringify(cart)); render();}
+function addToCart(id, nama, harga, stok){ let q = parseInt(document.getElementById('qty-'+id).value||1); let ex = cart.find(x=>x.id===id); if(ex){ if(ex.qty+q>stok){alert('Stok cuma '+stok); return;} ex.qty+=q; } else { if(q>stok){alert('Stok cuma '+stok); return;} cart.push({id,nama,harga,qty:q}); } save(); toggleCart(true); }
+function changeQty(id, d){ let it=cart.find(x=>x.id===id); if(!it) return; it.qty+=d; if(it.qty<=0) cart=cart.filter(x=>x.id!==id); save(); }
+function removeItem(id){ cart=cart.filter(x=>x.id!==id); save(); }
+function getOngkir(){ let m={"J&T Express":11000,"SiCepat Reg":10000,"SiCepat BEST":9000,"JNE Reguler":12000,"JNE YES":22000,"Pos Indonesia":9000,"GoSend Same Day (Medan)":15000,"Ambil di Toko (Gratis)":0}; let k=document.getElementById('kurirSelect')?document.getElementById('kurirSelect').value:'J&T Express'; return {kurir:k, ongkir:m[k]||11000}; }
+function render(){ document.getElementById('cartCount').innerText = cart.reduce((a,x)=>a+x.qty,0); let subtotal = cart.reduce((a,x)=>a+x.qty*x.harga,0); let o=getOngkir(); let total=subtotal+o.ongkir; document.getElementById('cartSubtotal').innerText = subtotal.toLocaleString('id-ID'); document.getElementById('cartOngkir').innerText = o.ongkir.toLocaleString('id-ID'); document.getElementById('kurirLabel').innerText = o.kurir; document.getElementById('cartTotal').innerText = total.toLocaleString('id-ID'); document.getElementById('cartItems').innerHTML = cart.length? cart.map(x=>`<div class="cartrow"><div><b>${x.nama}</b><br>Rp ${x.harga.toLocaleString('id-ID')} x ${x.qty} = Rp ${(x.harga*x.qty).toLocaleString('id-ID')}</div><div><button class="qtybtn" onclick="changeQty(${x.id},-1)">-</button> ${x.qty} <button class="qtybtn" onclick="changeQty(${x.id},1)">+</button><br><button onclick="removeItem(${x.id})" style="color:#B42318;background:none;border:0;cursor:pointer">Hapus</button></div></div>`).join('') : '<p>Keranjang masih kosong. Tambah barang dulu, bre.</p>'; }
+function toggleCart(o){ document.getElementById('drawer').classList.toggle('open', o); document.getElementById('overlay').classList.toggle('show', o); }
+async function checkout(){ let nama = document.getElementById('buyerName').value.trim(); let no_hp=document.getElementById('buyerPhone').value.trim(); let alamat=document.getElementById('buyerAddress').value.trim(); let kota=document.getElementById('buyerCity').value.trim(); let kurir=getOngkir().kurir; if(!nama){alert('Isi nama kamu dulu'); return;} if(!no_hp){alert('Isi No HP / WA kamu dulu, biar kurir bisa hubungin'); return;} if(kurir!=='Ambil di Toko (Gratis)' && !alamat){alert('Isi alamat lengkap dulu, biar barang tidak nyasar'); return;} if(kurir!=='Ambil di Toko (Gratis)' && !kota){alert('Isi Kecamatan / Kota dulu, biar ongkir kehitung'); return;} if(!cart.length){alert('Keranjang kosong'); return;} let res = await fetch('/api/checkout', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nama, no_hp, alamat, kota, kurir, items: cart})}); let data = await res.json(); if(data.error){alert(data.error); return;} localStorage.removeItem('thriftoria_cart'); cart=[]; window.location.href = '/checkout?order_id='+data.order_id; }
+render();
+</script></body></html>
