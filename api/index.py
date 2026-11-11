@@ -243,14 +243,22 @@ def api_ongkir():
 def index():
     data = load_data()
     for _p in data["products"]: _p["gambar_list"]=gambar_list_for(_p)
-    kategori = request.args.get("kategori","")
-    lengan = request.args.get("lengan","")
-    products = [p for p in data["products"] if p["stok"] > 0]  # STOK 0 = HILANG DARI WEB
-    if kategori: products = [p for p in products if p["kategori"]==kategori]
-    if lengan: products = [p for p in products if p["lengan"]==lengan]
-    kategoris = sorted(set([p["kategori"] for p in data["products"]]))
-    lengans = sorted(set([p["lengan"] for p in data["products"]]))
-    return render_template("index.html", products=products, kategoris=kategoris, lengans=lengans, kategori_filter=kategori, lengan_filter=lengan)
+    kategori = (request.args.get("kategori","") or "").strip()
+    lengan = (request.args.get("lengan","") or "").strip()
+    # FIX28: filter lama terlihat "tidak jalan" karena 2 hal:
+    # 1) Perbandingan persis (==) - kalau data lama ada spasi / beda kapital ("Lengan pendek", " Lengan Pendek ") langsung gagal, produk salah lolos / hilang.
+    # 2) Filter baru jalan kalau klik tombol Filter. Pembeli nyangka pilih dropdown langsung ke-filter (lihat screenshot: dropdown sudah Lengan Pendek tapi URL masih polos, belum ke-submit).
+    # Sekarang: normalisasi (strip + lower) + frontend onchange langsung submit.
+    products = [p for p in data["products"] if p["stok"] > 0]
+    if kategori:
+        kn=kategori.lower()
+        products = [p for p in products if (p.get("kategori","") or "").strip().lower()==kn]
+    if lengan:
+        ln=lengan.lower()
+        products = [p for p in products if (p.get("lengan","") or "").strip().lower()==ln]
+    kategoris = sorted(set([(p["kategori"] or "").strip() for p in data["products"] if p.get("kategori")]))
+    lengans = sorted(set([(p["lengan"] or "").strip() for p in data["products"] if p.get("lengan")]))
+    return render_template("index.html", products=products, kategoris=kategoris, lengans=lengans, kategori_filter=kategori, lengan_filter=lengan, total_tampil=len(products), total_semua=len([p for p in data["products"] if p["stok"]>0]))
 
 @app.route("/beli/<int:pid>", methods=["POST"])
 def beli(pid):
