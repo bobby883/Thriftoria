@@ -65,6 +65,16 @@ def simpan_gambar(file_storage):
 def next_id(items):
     return max([x["id"] for x in items], default=0) + 1
 
+# ===== LOGO STATIC =====
+@app.route("/static/logo.png")
+def logo_png():
+    from flask import send_file
+    import os as _o
+    p = _o.path.join(_BASE, "static", "logo.png")
+    if _o.path.exists(p):
+        return send_file(p, mimetype="image/png")
+    return "logo not found", 404
+
 # ===== TOKO =====
 @app.route("/")
 def index():
