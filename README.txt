@@ -1,18 +1,33 @@
-THRIFTORIA FIX11 - Hapus tulisan curhat di hero
+THRIFTORIA FIX12 - 1 Tombol Tambah Barang (Modal)
 
-YANG DIHAPUS:
-Di halaman toko, di bawah THRIFTORIA.STORE, tulisan ini DIHAPUS TOTAL (di laptop + HP):
-"Thrift kurasi, bukan asal bekas. Tampilan cream + kaca ala iPhone, nyaman dilihat lama. Stok real-time — kalau stok 1 dan kebeli, barang langsung hilang."
+YANG BARU:
+- Di Admin (/admin), form tambah yang panjang DIHAPUS, diganti 1 tombol besar:
+  [+ TAMBAH BARANG]
+- Klik tombol itu -> muncul popup / modal tambah barang, isinya lengkap:
+  * Nama Barang
+  * Foto (HP Galeri / Kamera, preview langsung)
+  * Deskripsi (kondisi, minus, bahan)
+  * Grade: A - Like New / B - Bagus minus dikit / C - Ada minus jelas
+  * Cocok untuk: Wanita / Pria / Unisex
+  * Ukuran: S / M / L / XL / XXL / All Size
+  * Kategori, Lengan, Harga, Stok
+  * Tombol SIMPAN BARANG
 
-Sekarang hero tinggal:
-THRIFTORIA.STORE
-INDONESIA STREETWEAR • PRELOVED • THRIFT • VINTAGE
-[100% PRELOVED] [STOK REAL-TIME] [BAYAR QRIS]
+- Di tabel Edit, tiap produk juga bisa edit Grade / Gender / Ukuran langsung, tanpa hapus produk.
 
-Bersih, pembeli langsung lihat produk, tidak baca curhat developer.
+- Di Toko, tiap produk sekarang tampil badge:
+  [Grade A] [Wanita] [Ukuran L] [Kaos • Lengan Pendek]
+
+CATATAN: Halaman yang kamu screenshot itu adalah /analyst (Data Analyst), memang tidak ada tambah barang di sana. Tambah barang hanya ada di /admin.
 
 CARA UPDATE:
 git add .
-git commit -m "hapus tulisan hero"
+git commit -m "1 tombol tambah barang modal grade gender ukuran"
 git push
 Vercel -> Redeploy tanpa cache
+
+CARA PAKAI:
+1. Buka /admin-login -> login
+2. Klik [+ TAMBAH BARANG]
+3. Isi foto, deskripsi, grade, harga, Wanita/Pria, ukuran
+4. SIMPAN BARANG -> langsung muncul di toko

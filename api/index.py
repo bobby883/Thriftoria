@@ -203,7 +203,7 @@ def tambah():
     # kalau tidak upload file, tapi kirim base64 dari HP (form gambar_base64)
     if not gambar:
         gambar = request.form.get("gambar_base64","")[:500000]
-    data["products"].append({"id":next_id(data["products"]), "nama":request.form["nama"], "kategori":request.form["kategori"], "lengan":request.form["lengan"], "harga":int(request.form["harga"]), "stok":int(request.form["stok"]), "deskripsi":request.form.get("deskripsi",""), "gambar":gambar})
+    data["products"].append({"id":next_id(data["products"]), "nama":request.form["nama"], "kategori":request.form["kategori"], "lengan":request.form["lengan"], "harga":int(request.form["harga"]), "stok":int(request.form["stok"]), "deskripsi":request.form.get("deskripsi",""), "gambar":gambar, "grade":request.form.get("grade","A"), "gender":request.form.get("gender","Unisex"), "ukuran":request.form.get("ukuran","All Size")})
     save_data(data); return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/edit/<int:pid>", methods=["POST"])
@@ -212,7 +212,7 @@ def edit(pid):
     data=load_data()
     for p in data["products"]:
         if p["id"]==pid:
-            p["nama"]=request.form["nama"]; p["kategori"]=request.form["kategori"]; p["lengan"]=request.form["lengan"]; p["harga"]=int(request.form["harga"]); p["stok"]=int(request.form["stok"])
+            p["nama"]=request.form["nama"]; p["kategori"]=request.form["kategori"]; p["lengan"]=request.form["lengan"]; p["harga"]=int(request.form["harga"]); p["stok"]=int(request.form["stok"]); p["grade"]=request.form.get("grade", p.get("grade","A")); p["gender"]=request.form.get("gender", p.get("gender","Unisex")); p["ukuran"]=request.form.get("ukuran", p.get("ukuran","All Size"))
             _g = simpan_gambar(request.files.get("gambar"))
             if _g: p["gambar"]=_g
             elif request.form.get("gambar_base64"): p["gambar"]=request.form.get("gambar_base64","")[:500000]; p["deskripsi"]=request.form.get("deskripsi","")
