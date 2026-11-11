@@ -81,6 +81,8 @@ def nota():
 
 # ===== ADMIN =====
 @app.route("/login", methods=["GET","POST"])
+@app.route("/admin-login", methods=["GET","POST"])
+@app.route("/thriftoria-admin", methods=["GET","POST"])
 def login():
     if request.method=="POST":
         if request.form.get("username")=="admin" and request.form.get("password")=="thriftoria123":
@@ -96,7 +98,7 @@ def login_required(f):
     from functools import wraps
     @wraps(f)
     def wrap(*a, **kw):
-        if "admin" not in session: return redirect(url_for("login"))
+        if "admin" not in session: return redirect("/admin-login")
         return f(*a, **kw)
     return wrap
 
