@@ -1,21 +1,31 @@
-THRIFTORIA FIX14 - Tambah Logo Asli (T + Gantungan)
+THRIFTORIA FIX15 - Fix Looping Checkout + Notif Pembayaran + Logo di Nota
 
-LOGO:
-- File: static/logo.png (hasil crop dari Logo Thriftoria.pdf yang kamu kirim)
-- Logo: Huruf T coklat tua + gantungan oranye di atasnya + tulisan thriftoria + PRELOVED THRIFT VINTAGE
-- Route: /static/logo.png (via Flask send_file, biar jalan di Vercel)
+BUG YANG DIPERBAIKI:
+- Tombol SAYA SUDAH BAYAR & CEK STATUS tadi looping di halaman checkout saja, karena pakai location.reload().
+- Sekarang:
+  * SAYA SUDAH BAYAR -> status jadi Lunas -> langsung pindah ke /nota?order_id=THR-XXXXXX (tidak reload di tempat)
+  * CEK STATUS -> fetch /api/order -> kalau sudah Lunas, langsung pindah ke nota. Kalau belum, muncul tulisan "Belum lunas, masih Menunggu Pembayaran"
 
-DIPASANG DI:
-- Topbar (kiri atas): logo kecil 44px + THRIFTORIA.STORE
-- Hero toko: logo besar 180px di tengah, di atas judul
-- Login / Admin / Analyst / Checkout: logo kecil di atas judul
+YANG BARU:
+1. NOTIF PEMBAYARAN dengan LOGO di halaman Checkout:
+   [Logo Thriftoria] Notif Pembayaran — THRIFTORIA
+   Order THR-XXXX dibuat. Total Rp XX • Status: Menunggu Pembayaran • Bayar QRIS di bawah, jangan bayar 2x.
+   Notif ini update otomatis sesuai order.
+
+2. NOTA pakai LOGO THRIFTORIA:
+   - Logo besar 170px di atas nota
+   - THRIFTORIA.STORE + PRELOVED • THRIFT • VINTAGE
+   - Detail order lengkap: Order ID, Pembeli, tiap produk x qty, Total, Status
+   - Notif box: [Logo] Pembayaran Lunas — Terima kasih sudah belanja di THRIFTORIA. Screenshot nota ini sebagai bukti.
+   - Tombol Print / Simpan Nota + Kembali ke Toko
 
 CARA UPDATE:
 git add .
-git commit -m "tambah logo thriftoria"
+git commit -m "fix looping checkout notif logo nota"
 git push
 Vercel -> Redeploy tanpa cache
 
-CATATAN:
-- Kalau mau logo yang lebih jernih (tanpa background cream), kirim file PNG asli logo-nya (bukan screenshot PDF), nanti aku gantiin static/logo.png dengan yang asli.
-- Background logo sekarang cream #FFF6EC, nyatu dengan tema cream glass.
+CARA TES:
+1. Buka toko -> tambah keranjang -> Checkout -> muncul QRIS
+2. Klik SAYA SUDAH BAYAR -> harusnya langsung pindah ke Nota (tidak muter di checkout lagi)
+3. Di Nota, cek logo Thriftoria muncul di atas + notif pembayaran muncul

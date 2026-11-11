@@ -104,7 +104,15 @@ def beli(pid):
 
 @app.route("/nota")
 def nota():
-    return render_template("nota.html", produk=request.args.get("produk"), qty=request.args.get("qty"), total=request.args.get("total"))
+    # Nota baru: bisa dari order_id (checkout QRIS) atau dari beli lama (produk/qty/total)
+    oid = request.args.get("order_id","")
+    if oid:
+        data = load_data()
+        orders = [o for o in data["orders"] if o.get("order_id")==oid]
+        if orders:
+            total = sum(o["total"] for o in orders)
+            return render_template("nota.html", order_id=oid, orders=orders, total=total, status=orders[0].get("status","Lunas"), produk=orders[0].get("produk_nama",""), qty=sum(o.get("qty",0) for o in orders), nama_pembeli=orders[0].get("nama_pembeli",""))
+    return render_template("nota.html", produk=request.args.get("produk"), qty=request.args.get("qty"), total=request.args.get("total"), order_id="", orders=[], status="Lunas")
 
 
 # ===== CART + QRIS - 1 TRANSAKSI = 1 KUNCI PEMBAYARAN =====
