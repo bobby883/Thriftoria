@@ -158,4 +158,33 @@ def api_analyst():
     data=load_data()
     return jsonify({"products":data["products"], "orders":data["orders"], "updated_at":datetime.now().isoformat()})
 
+
+# ===== FIX VERCEL ROUTING =====
+# Vercel ngirim PATH_INFO = /api/index.py, Flask nyari route "/" -> 404
+# Middleware ini ubah /api/index.py jadi / biar Flask ketemu route-nya
+class VercelFixMiddleware:
+    def __init__(self, app):
+        self.app = app
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        # /api/index.py -> /
+        # /api/index.py/admin -> /admin
+        # /api/index.py/api/data-analyst -> /api/data-analyst
+        if path.startswith("/api/index.py"):
+            new_path = path[len("/api/index.py"):] or "/"
+            environ["PATH_INFO"] = new_path
+            environ["SCRIPT_NAME"] = "/api/index.py"
+        elif path.startswith("/api/") and path not in ["/api/data-analyst"]:
+            # Jangan ubah /api/data-analyst, itu route Flask asli
+            pass
+        return self.app(environ, start_response)
+
+app.wsgi_app = VercelFixMiddleware(app.wsgi_app)
+
+# Route cadangan kalau Vercel tetap manggil /api/index.py langsung
+@app.route("/api/index.py")
+@app.route("/api/index.py/")
+def _vercel_index_alias():
+    return index()
+
 # Vercel butuh variable 'app' di atas, jangan dihapus
