@@ -1,53 +1,62 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THRIFTORIA STORE</title><style>
-:root{--bg:#FFF6EC;--card:#FFFFFF;--ink:#2B2118;--muted:#7A6A5E;--accent:#C96F4A;--accent2:#7A9A7E;--soft:#FCE8D8;--line:#EADBCB}
-*{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
-.wrap{max-width:1120px;margin:auto;padding:18px 16px 80px}
-header{background:linear-gradient(135deg,#FFF6EC 0%,#FCE8D8 55%,#DCE8D8 100%);border:1px solid var(--line);border-radius:22px;padding:22px}
-h1{margin:0;font-size:36px;letter-spacing:-.5px} .tag{margin:6px 0 0;color:var(--muted);font-weight:700;letter-spacing:1.5px;font-size:13px}
-.topbar{position:sticky;top:0;z-index:20;background:rgba(255,246,236,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
-.cartbtn{background:var(--ink);color:#fff;border:0;padding:10px 16px;border-radius:999px;font-weight:800;cursor:pointer}
-.filter{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0} select,input{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)} .btn{background:var(--accent);color:#fff;padding:10px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:700} .btn.sage{background:var(--accent2)} .btn.dark{background:var(--ink)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px} .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 20px rgba(43,33,24,.06);position:relative} .card h3{margin:10px 0 6px} .price{font-size:18px;font-weight:800} .badge{display:inline-block;background:var(--soft);color:#8A4A2E;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700} .badge.sage{background:#E2EEE2;color:#3E5A41} .badge.hot{background:#FFE1D6;color:#9A2E12} .sisa{font-size:12px;color:#B42318;font-weight:700}
-.drawer{position:fixed;right:0;top:0;bottom:0;width:380px;max-width:92vw;background:#fff;box-shadow:-10px 0 40px rgba(0,0,0,.15);padding:20px;transform:translateX(100%);transition:.3s;z-index:50;overflow:auto} .drawer.open{transform:none} .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:40} .overlay.show{display:block}
-.cartrow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #F0E2D2;padding:10px 0} .qtybtn{width:28px;height:28px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}
-.promo{background:#2B2118;color:#FFE8D8;padding:12px 14px;border-radius:14px;margin:16px 0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THRIFTORIA STORE - HOLOGRAM</title><style>
+/* THRIFTORIA HOLOGRAM - NO CIRCLE, SKELETON ONLY */
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:#0A0A14;color:#EDEDF5;line-height:1.5;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(600px 300px at 10% 10%, rgba(0,255,255,.18), transparent 60%),radial-gradient(600px 300px at 90% 20%, rgba(255,0,255,.16), transparent 60%),radial-gradient(700px 400px at 50% 100%, rgba(120,0,255,.20), transparent 60%);pointer-events:none;z-index:0}
+.wrap{max-width:1120px;margin:auto;padding:18px 16px 80px;position:relative;z-index:1}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,20,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.15);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;background:linear-gradient(90deg,#00F0FF,#FF00E5,#FFD700,#00FF88,#00F0FF);background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:holoMove 4s linear infinite}
+@keyframes holoMove{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.cartbtn{background:linear-gradient(90deg,#00F0FF,#FF00E5);color:#fff;border:0;padding:10px 14px;font-weight:800;cursor:pointer;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+/* HOLOGRAM CARD - kotak tajam, border hologram, bukan bulet */
+.holo{position:relative;background:rgba(255,255,255,.06);backdrop-filter:blur(10px);border:1px solid transparent;background-clip:padding-box;padding:18px}
+.holo:before{content:"";position:absolute;inset:-1px;background:linear-gradient(135deg,#00F0FF,#FF00E5,#FFD700,#00FF88,#00F0FF);background-size:300% 300%;z-index:-1;animation:holoMove 3s linear infinite}
+.holo-card{background:rgba(20,20,35,.85);border:1px solid rgba(255,255,255,.18);padding:16px;position:relative;overflow:hidden;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.holo-card:after{content:"";position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.25),transparent);transform:skewX(-20deg);animation:shine 2.8s infinite}
+@keyframes shine{0%{left:-100%}60%,100%{left:130%}}
+.holo-card h3{margin:10px 0 6px;color:#fff} .price{font-size:19px;font-weight:900;color:#00F0FF}
+.badge{display:inline-block;background:#111;color:#00F0FF;border:1px solid #00F0FF;padding:4px 8px;font-size:11px;font-weight:800;letter-spacing:1px}
+.badge.hot{background:#FF00E5;color:#fff;border-color:#FF00E5} .badge.sage{background:#00FF88;color:#000;border-color:#00FF88}
+select,input{padding:10px 12px;background:#151528;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:0}
+.btn{background:linear-gradient(90deg,#00F0FF,#FF00E5);color:#fff;padding:10px 14px;border:0;font-weight:800;cursor:pointer;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+.btn.sage{background:linear-gradient(90deg,#00FF88,#00F0FF);color:#000} .btn.dark{background:#fff;color:#000}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.filter{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+/* SKELETON - kotak, bukan circle */
+.skeleton{background:linear-gradient(90deg,#1A1A2E 25%,#2A2A45 37%,#1A1A2E 63%);background-size:400% 100%;animation:skeletonLoad 1.2s infinite}
+@keyframes skeletonLoad{0%{background-position:100% 0}100%{background-position:0 0}}
+.skel-line{height:14px;margin:8px 0} .skel-title{height:20px;width:70%} .skel-img{height:150px;width:100%} .skel-btn{height:38px;width:100%}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:380px;max-width:92vw;background:#12121F;border-left:1px solid rgba(255,255,255,.2);padding:20px;transform:translateX(100%);transition:.3s;z-index:50;overflow:auto;color:#fff} .drawer.open{transform:none} .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:40} .overlay.show{display:block}
+.cartrow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.15);padding:10px 0} .qtybtn{width:30px;height:30px;background:#1A1A2E;color:#fff;border:1px solid rgba(255,255,255,.3);cursor:pointer}
+.promo{background:linear-gradient(90deg,#00F0FF,#FF00E5,#FFD700);color:#000;padding:12px 14px;font-weight:800;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 </style></head><body>
-<div class="topbar"><b>THRIFTORIA.STORE</b><span>INDONESIA STREETWEAR</span><button class="cartbtn" onclick="toggleCart(true)">🛒 Keranjang (<span id="cartCount">0</span>)</button></div>
-<div class="wrap"><header><h1>THRIFTORIA.STORE</h1><p class="tag">INDONESIA STREETWEAR • PRELOVED • THRIFT • VINTAGE</p><p style="color:var(--muted);max-width:640px">Thrift kurasi, bukan asal bekas. Stok terbatas — kalau stok 1 dan kebeli, barangnya langsung hilang dari web.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span style="background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-weight:700">🌿 100% Preloved</span><span style="background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-weight:700">⚡ Stok Real-Time</span><span style="background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-weight:700">📱 Bayar QRIS</span></div></header>
-<div class="promo"><span>🔥 <b>Sisa 1 = Rebutan!</b> Kalau kamu checkout, stok langsung terkunci buat kamu.</span><span>1 Transaksi = 1 QRIS = 1 Kunci</span></div>
-<form class="filter" method="get"><select name="kategori"><option value="">Semua Kategori</option>{% for k in kategoris %}<option value="{{k}}" {% if kategori_filter==k %}selected{% endif %}>{{k}}</option>{% endfor %}</select><select name="lengan"><option value="">Semua Lengan</option>{% for l in lengans %}<option value="{{l}}" {% if lengan_filter==l %}selected{% endif %}>{{l}}</option>{% endfor %}</select><button class="btn">Filter</button><a href="/" style="align-self:center">Reset</a></form>
-<div class="grid">{% for p in products %}<div class="card">{% if p.stok==1 %}<span class="badge hot">🔥 SISA 1 — REBUTAN</span>{% elif p.stok<=3 %}<span class="badge">⚡ Sisa {{p.stok}} aja</span>{% else %}<span class="badge sage">{{p.kategori}} • {{p.lengan}}</span>{% endif %}<h3>{{p.nama}}</h3><p style="color:var(--muted);margin:0">{{p.deskripsi}} • {{p.kategori}} • {{p.lengan}}</p><p class="price">Rp {{ "{:,}".format(p.harga) }} <span style="font-size:13px;color:var(--muted)">• Stok {{p.stok}}</span></p><div style="display:flex;gap:8px;align-items:center"><input type="number" id="qty-{{p.id}}" value="1" min="1" max="{{p.stok}}" style="width:70px"><button class="btn" onclick="addToCart({{p.id}}, '{{p.nama}}', {{p.harga}}, {{p.stok}})">+ Keranjang</button></div></div>{% endfor %}</div>
-<p style="text-align:center;color:var(--muted);margin-top:30px">THRIFTORIA — Preloved, tapi tetap paling baru di mata kamu.</p></div>
+<div class="topbar"><div class="logo">THRIFTORIA.STORE</div><span style="letter-spacing:2px;font-size:12px;color:#aaa">INDONESIA STREETWEAR // HOLOGRAM</span><button class="cartbtn" onclick="toggleCart(true)">KERANJANG [ <span id="cartCount">0</span> ]</button></div>
+<div class="wrap">
+<div class="holo"><h1 style="margin:0;font-size:38px;background:linear-gradient(90deg,#00F0FF,#FF00E5,#FFD700,#00FF88,#00F0FF);background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:holoMove 4s linear infinite">THRIFTORIA.STORE</h1><p style="letter-spacing:2px;color:#aaa;font-weight:700;font-size:13px">INDONESIA STREETWEAR • PRELOVED • THRIFT • VINTAGE</p><p style="color:#ccc;max-width:640px">Thrift kurasi, bukan asal bekas. Efek hologram, stok real-time. Kalau stok 1 dan kebeli, barang langsung hilang dari web.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span class="badge">100% PRELOVED</span><span class="badge sage">STOK REAL-TIME</span><span class="badge">BAYAR QRIS</span></div></div>
+<div class="promo"><span>STOK 1 = REBUTAN! Checkout = stok terkunci buat kamu.</span><span>1 TRANSAKSI = 1 QRIS = 1 KUNCI</span></div>
+<form class="filter" method="get"><select name="kategori"><option value="">Semua Kategori</option>{% for k in kategoris %}<option value="{{k}}" {% if kategori_filter==k %}selected{% endif %}>{{k}}</option>{% endfor %}</select><select name="lengan"><option value="">Semua Lengan</option>{% for l in lengans %}<option value="{{l}}" {% if lengan_filter==l %}selected{% endif %}>{{l}}</option>{% endfor %}</select><button class="btn">FILTER</button><a href="/" style="color:#00F0FF;align-self:center">RESET</a></form>
+
+<!-- SKELETON LOADING - muncul dulu 900ms, bukan spinner bulet -->
+<div id="skeleton" class="grid">
+  <div class="holo-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+  <div class="holo-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+  <div class="holo-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+  <div class="holo-card"><div class="skeleton skel-img"></div><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line" style="width:50%"></div><div class="skeleton skel-btn"></div></div>
+</div>
+
+<div class="grid" id="realGrid" style="display:none">{% for p in products %}<div class="holo-card">{% if p.stok==1 %}<span class="badge hot">SISA 1 - REBUTAN</span>{% elif p.stok<=3 %}<span class="badge">SISA {{p.stok}} AJA</span>{% else %}<span class="badge sage">{{p.kategori}} • {{p.lengan}}</span>{% endif %}<h3>{{p.nama}}</h3><p style="color:#aaa;margin:0">{{p.deskripsi}} • {{p.kategori}} • {{p.lengan}}</p><p class="price">Rp {{ "{:,}".format(p.harga) }} <span style="font-size:13px;color:#aaa">• Stok {{p.stok}}</span></p><div style="display:flex;gap:8px;align-items:center"><input type="number" id="qty-{{p.id}}" value="1" min="1" max="{{p.stok}}" style="width:70px"><button class="btn" onclick="addToCart({{p.id}}, '{{p.nama}}', {{p.harga}}, {{p.stok}})">+ KERANJANG</button></div></div>{% endfor %}</div>
+<p style="text-align:center;color:#888;margin-top:30px">THRIFTORIA — HOLOGRAM EDITION • Preloved, tapi tetap paling baru di mata kamu.</p></div>
 <div class="overlay" id="overlay" onclick="toggleCart(false)"></div>
-<div class="drawer" id="drawer"><h2>🛒 Keranjang</h2><p style="color:var(--muted)">Stok belum terkunci sampai kamu klik Checkout + QRIS muncul.</p><div id="cartItems"></div><hr><input id="buyerName" placeholder="Nama kamu (wajib)" style="width:100%;margin-bottom:10px"><p><b>Total: Rp <span id="cartTotal">0</span></b></p><button class="btn dark" style="width:100%;padding:12px" onclick="checkout()">Checkout → Bayar QRIS</button><button onclick="toggleCart(false)" style="width:100%;margin-top:10px;padding:10px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer">Tutup</button><p style="font-size:12px;color:var(--muted)">Setelah Checkout, stok langsung dikunci untuk order kamu. 1 order = 1 QRIS, jangan bayar 2x.</p></div>
+<div class="drawer" id="drawer"><h2>KERANJANG</h2><p style="color:#aaa">Stok belum terkunci sampai kamu klik Checkout + QRIS muncul.</p><div id="cartItems"></div><hr><input id="buyerName" placeholder="Nama kamu (wajib)" style="width:100%;margin-bottom:10px"><p><b>Total: Rp <span id="cartTotal">0</span></b></p><button class="btn dark" style="width:100%;padding:12px" onclick="checkout()">CHECKOUT - BAYAR QRIS</button><button onclick="toggleCart(false)" style="width:100%;margin-top:10px;padding:10px;background:#1A1A2E;color:#fff;border:1px solid rgba(255,255,255,.3);cursor:pointer">TUTUP</button><p style="font-size:12px;color:#aaa">Setelah Checkout, stok langsung dikunci. 1 order = 1 QRIS, jangan bayar 2x.</p></div>
 <script>
+setTimeout(()=>{document.getElementById('skeleton').style.display='none';document.getElementById('realGrid').style.display='grid';}, 900);
 let cart = JSON.parse(localStorage.getItem('thriftoria_cart')||'[]');
 function save(){localStorage.setItem('thriftoria_cart', JSON.stringify(cart)); render();}
-function addToCart(id, nama, harga, stok){
-  let q = parseInt(document.getElementById('qty-'+id).value||1);
-  let ex = cart.find(x=>x.id===id);
-  if(ex){ if(ex.qty+q>stok){alert('Stok cuma '+stok); return;} ex.qty+=q; }
-  else { if(q>stok){alert('Stok cuma '+stok); return;} cart.push({id,nama,harga,qty:q}); }
-  save(); toggleCart(true);
-}
+function addToCart(id, nama, harga, stok){ let q = parseInt(document.getElementById('qty-'+id).value||1); let ex = cart.find(x=>x.id===id); if(ex){ if(ex.qty+q>stok){alert('Stok cuma '+stok); return;} ex.qty+=q; } else { if(q>stok){alert('Stok cuma '+stok); return;} cart.push({id,nama,harga,qty:q}); } save(); toggleCart(true); }
 function changeQty(id, d){ let it=cart.find(x=>x.id===id); if(!it) return; it.qty+=d; if(it.qty<=0) cart=cart.filter(x=>x.id!==id); save(); }
 function removeItem(id){ cart=cart.filter(x=>x.id!==id); save(); }
-function render(){
-  document.getElementById('cartCount').innerText = cart.reduce((a,x)=>a+x.qty,0);
-  let total = cart.reduce((a,x)=>a+x.qty*x.harga,0);
-  document.getElementById('cartTotal').innerText = total.toLocaleString('id-ID');
-  document.getElementById('cartItems').innerHTML = cart.length? cart.map(x=>`<div class="cartrow"><div><b>${x.nama}</b><br>Rp ${x.harga.toLocaleString('id-ID')} x ${x.qty} = Rp ${(x.harga*x.qty).toLocaleString('id-ID')}</div><div><button class="qtybtn" onclick="changeQty(${x.id},-1)">-</button> ${x.qty} <button class="qtybtn" onclick="changeQty(${x.id},1)">+</button><br><button onclick="removeItem(${x.id})" style="color:#B42318;background:none;border:0;cursor:pointer">Hapus</button></div></div>`).join('') : '<p>Keranjang masih kosong. Tambah barang dulu, bre.</p>';
-}
+function render(){ document.getElementById('cartCount').innerText = cart.reduce((a,x)=>a+x.qty,0); let total = cart.reduce((a,x)=>a+x.qty*x.harga,0); document.getElementById('cartTotal').innerText = total.toLocaleString('id-ID'); document.getElementById('cartItems').innerHTML = cart.length? cart.map(x=>`<div class="cartrow"><div><b>${x.nama}</b><br>Rp ${x.harga.toLocaleString('id-ID')} x ${x.qty} = Rp ${(x.harga*x.qty).toLocaleString('id-ID')}</div><div><button class="qtybtn" onclick="changeQty(${x.id},-1)">-</button> ${x.qty} <button class="qtybtn" onclick="changeQty(${x.id},1)">+</button><br><button onclick="removeItem(${x.id})" style="color:#FF00E5;background:none;border:0;cursor:pointer">HAPUS</button></div></div>`).join('') : '<p>Keranjang masih kosong. Tambah barang dulu, bre.</p>'; }
 function toggleCart(o){ document.getElementById('drawer').classList.toggle('open', o); document.getElementById('overlay').classList.toggle('show', o); }
-async function checkout(){
-  let nama = document.getElementById('buyerName').value.trim();
-  if(!nama){alert('Isi nama kamu dulu'); return;}
-  if(!cart.length){alert('Keranjang kosong'); return;}
-  let res = await fetch('/api/checkout', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nama, items: cart})});
-  let data = await res.json();
-  if(data.error){alert(data.error); return;}
-  localStorage.removeItem('thriftoria_cart'); cart=[];
-  window.location.href = '/checkout?order_id='+data.order_id;
-}
+async function checkout(){ let nama = document.getElementById('buyerName').value.trim(); if(!nama){alert('Isi nama kamu dulu'); return;} if(!cart.length){alert('Keranjang kosong'); return;} let res = await fetch('/api/checkout', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nama, items: cart})}); let data = await res.json(); if(data.error){alert(data.error); return;} localStorage.removeItem('thriftoria_cart'); cart=[]; window.location.href = '/checkout?order_id='+data.order_id; }
 render();
 </script></body></html>
