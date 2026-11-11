@@ -90,6 +90,97 @@ ONGKIR_TABLE = {
   "Ambil di Toko (Gratis)": 0,
 }
 
+
+# ===== ONGKIR RAJAONGKIR (DATA ASLI DARI EKSPEDISI) =====
+# Cara pakai: daftar di https://rajaongkir.com / https://komerce.id
+# Ambil API Key Starter (gratis), lalu di Vercel -> Settings -> Environment Variables:
+#   RAJAONGKIR_API_KEY = api_key_kamu
+# Kalau key belum diisi, web pakai fallback flat (biar tetap jalan), tapi tulis "Estimasi".
+# Berat default: 500 gram per 1 item thrift (kaos/cargo). Kalau 2 item = 1000 gram, dst.
+import urllib.request, urllib.parse, json as _json, os as _os
+
+RAJAONGKIR_KEY = _os.environ.get("RAJAONGKIR_API_KEY", "")
+# ID kota asal: Thriftoria di Indrapura, Batu Bara, Sumut.
+# RajaOngkir Starter pakai city_id. Kalau belum tau, isi 0 -> nanti diisi dari daftar kota di admin.
+# Default sementara: Medan (city_id 152) sebagai hub terdekat, biar ongkir kehitung.
+ORIGIN_CITY_ID = _os.environ.get("ORIGIN_CITY_ID", "152")
+
+@app.route("/api/kota")
+def api_kota():
+    # Kembalikan daftar kota untuk dropdown customer. Kalau ada API key, ambil dari RajaOngkir, kalau tidak pakai list utama.
+    if RAJAONGKIR_KEY:
+        try:
+            req = urllib.request.Request("https://api.rajaongkir.com/starter/city", headers={"key": RAJAONGKIR_KEY})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                j = _json.loads(r.read().decode())
+                cities = [{"id": x["city_id"], "label": f"{x['city_name']}, {x['province']}"} for x in j["rajaongkir"]["results"]]
+                return jsonify({"source":"rajaongkir", "cities": cities})
+        except Exception as e:
+            pass
+    # Fallback: kota besar yang sering order, biar tetap jalan tanpa API key
+    fallback = [
+        {"id":"152","label":"Medan, Sumatera Utara"},
+        {"id":"23","label":"Batu Bara, Sumatera Utara"},
+        {"id":"151","label":"Medan, Sumatera Utara"},
+        {"id":"21","label":"Asahan, Sumatera Utara"},
+        {"id":"153","label":"Binjai, Sumatera Utara"},
+        {"id":"154","label":"Tebing Tinggi, Sumatera Utara"},
+        {"id":"155","label":"Pematang Siantar, Sumatera Utara"},
+        {"id":"156","label":"Tanjung Balai, Sumatera Utara"},
+        {"id":"501","label":"Jakarta Pusat, DKI Jakarta"},
+        {"id":"502","label":"Jakarta Utara, DKI Jakarta"},
+        {"id":"503","label":"Jakarta Barat, DKI Jakarta"},
+        {"id":"504","label":"Jakarta Selatan, DKI Jakarta"},
+        {"id":"505","label":"Jakarta Timur, DKI Jakarta"},
+        {"id":"78","label":"Bandung, Jawa Barat"},
+        {"id":"114","label":"Surabaya, Jawa Timur"},
+        {"id":"444","label":"Makassar, Sulawesi Selatan"},
+        {"id":"256","label":"Denpasar, Bali"},
+        {"id":"17","label":"Banda Aceh, Aceh"},
+        {"id":"398","label":"Padang, Sumatera Barat"},
+        {"id":"278","label":"Pekanbaru, Riau"},
+        {"id":"122","label":"Palembang, Sumatera Selatan"},
+        {"id":"158","label":"Yogyakarta, DI Yogyakarta"},
+        {"id":"445","label":"Manado, Sulawesi Utara"},
+        {"id":"492","label":"Jayapura, Papua"},
+    ]
+    return jsonify({"source":"fallback", "cities": fallback, "note":"Daftar kota fallback. Pasang RAJAONGKIR_API_KEY di Vercel untuk daftar lengkap + ongkir asli."})
+
+@app.route("/api/ongkir", methods=["POST"])
+def api_ongkir():
+    # Body: {"destination_city_id":"152", "weight_gram":500, "courier":"jne"}
+    # Courier: jne, jnt, sicepat, pos, anteraja, tiki, wahana
+    try:
+        body = request.get_json(force=True)
+    except:
+        return jsonify({"error":"JSON tidak valid"}), 400
+    dest = str(body.get("destination_city_id",""))
+    weight = int(body.get("weight_gram", 500))
+    courier = str(body.get("courier","jne")).lower()
+    if not dest:
+        return jsonify({"error":"Pilih kota tujuan dulu", "ongkir":0}), 400
+    # Kalau belum ada API key -> fallback flat, tapi tandai estimasi
+    if not RAJAONGKIR_KEY:
+        flat = {"jne":12000, "jnt":11000, "sicepat":10000, "pos":9000, "anteraja":10000, "tiki":13000, "wahana":12000}
+        return jsonify({"source":"estimasi", "ongkir": flat.get(courier,11000), "courier":courier, "weight_gram":weight, "note":"Ini masih estimasi flat. Pasang RAJAONGKIR_API_KEY di Vercel untuk ongkir asli dari ekspedisi."})
+    # Ada API key -> tanya ke RajaOngkir
+    try:
+        data_post = urllib.parse.urlencode({"origin": ORIGIN_CITY_ID, "destination": dest, "weight": weight, "courier": courier}).encode()
+        req = urllib.request.Request("https://api.rajaongkir.com/starter/cost", data=data_post, headers={"key": RAJAONGKIR_KEY, "content-type":"application/x-www-form-urlencoded"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            j = _json.loads(r.read().decode())
+            costs = j["rajaongkir"]["results"][0]["costs"]
+            # Ambil layanan termurah (REG) sebagai default
+            layanan = []
+            for co in costs:
+                c0 = co["cost"][0]
+                layanan.append({"service": co["service"], "description": co["description"], "ongkir": c0["value"], "etd": c0["etd"]})
+            layanan.sort(key=lambda x: x["ongkir"])
+            return jsonify({"source":"rajaongkir", "courier":courier, "weight_gram":weight, "layanan":layanan, "ongkir": layanan[0]["ongkir"] if layanan else 0, "service": layanan[0]["service"] if layanan else ""})
+    except Exception as e:
+        return jsonify({"source":"error", "error":str(e), "ongkir":0}), 500
+
+
 # ===== TOKO =====
 @app.route("/")
 def index():
@@ -125,10 +216,8 @@ def nota():
         data = load_data()
         orders = [o for o in data["orders"] if o.get("order_id")==oid]
         if orders:
-            subtotal = sum(o["total"] for o in orders)
-            ongkir = orders[0].get("ongkir",0)
-            total = subtotal + ongkir
-            return render_template("nota.html", order_id=oid, orders=orders, total=total, subtotal=subtotal, ongkir=ongkir, kurir=orders[0].get("kurir",""), no_hp=orders[0].get("no_hp",""), alamat=orders[0].get("alamat",""), kota=orders[0].get("kota",""), status=orders[0].get("status","Lunas"), produk=orders[0].get("produk_nama",""), qty=sum(o.get("qty",0) for o in orders), nama_pembeli=orders[0].get("nama_pembeli",""))
+            total = sum(o["total"] for o in orders)
+            return render_template("nota.html", order_id=oid, orders=orders, total=total, status=orders[0].get("status","Lunas"), produk=orders[0].get("produk_nama",""), qty=sum(o.get("qty",0) for o in orders), nama_pembeli=orders[0].get("nama_pembeli",""))
     return render_template("nota.html", produk=request.args.get("produk"), qty=request.args.get("qty"), total=request.args.get("total"), order_id="", orders=[], status="Lunas")
 
 
@@ -150,14 +239,15 @@ def api_checkout():
     except:
         return jsonify({"error":"JSON tidak valid"}), 400
     nama = body.get("nama","Pelanggan")
-    no_hp = body.get("no_hp","")
-    alamat = body.get("alamat","")
-    kota = body.get("kota","")
-    kurir = body.get("kurir","J&T Express")
-    ongkir = ONGKIR_TABLE.get(kurir, 11000)
     items = body.get("items",[])
     if not items:
         return jsonify({"error":"Keranjang kosong"}), 400
+    # Validasi pengiriman: kalau bukan ambil di toko, wajib kota + ongkir sudah dihitung
+    if kurir != "Ambil di Toko (Gratis)":
+        if not kota or not kota_id:
+            return jsonify({"error":"Pilih Kecamatan / Kota dulu, biar ongkir kehitung dari ekspedisi"}), 400
+        if ongkir <= 0:
+            return jsonify({"error":"Ongkir belum kehitung. Pilih kota + kurir dulu, tunggu ongkir muncul"}), 400
     data = load_data()
     total = 0
     # Validasi stok dulu, kalau ada yang kurang -> gagal semua, tidak ada yang terpotong
@@ -170,19 +260,18 @@ def api_checkout():
     # KUNCI STOK: langsung kurangi stok, barang terkunci untuk transaksi ini
     oid = buat_order_id()
     rincian = []
-    for idx_it, it in enumerate(items):
+    for it in items:
         p = next((x for x in data["products"] if x["id"]==int(it["id"])))
         qty = int(it["qty"])
         sub = p["harga"]*qty
         total += sub
         p["stok"] -= qty  # stok berkurang, kalau jadi 0 -> hilang dari web
         rincian.append({"nama":p["nama"],"qty":qty,"harga":p["harga"],"subtotal":sub})
-        # ongkir hanya disimpan di baris pertama, biar tidak kehitung 2x pas di-sum
-        data["orders"].append({"id":next_id(data["orders"]), "order_id":oid, "tanggal":datetime.now().strftime("%Y-%m-%d %H:%M"), "nama_pembeli":nama, "no_hp":no_hp, "alamat":alamat, "kota":kota, "kurir":kurir, "ongkir": ongkir if idx_it==0 else 0, "produk_nama":p["nama"], "qty":qty, "total":sub, "status":"Menunggu Pembayaran", "tipe":"penjualan"})
+        data["orders"].append({"id":next_id(data["orders"]), "order_id":oid, "tanggal":datetime.now().strftime("%Y-%m-%d %H:%M"), "nama_pembeli":nama, "produk_nama":p["nama"], "qty":qty, "total":sub, "status":"Menunggu Pembayaran", "tipe":"penjualan"})
     save_data(data)
-    total_bayar = total + ongkir
-    qris_text = f"THRIFTORIA|{oid}|TOTAL:{total_bayar}|NAMA:{nama}"
-    return jsonify({"order_id":oid, "total":total, "ongkir":ongkir, "total_bayar":total_bayar, "kurir":kurir, "rincian":rincian, "qris_text":qris_text, "status":"Menunggu Pembayaran", "locked":True, "message":"Stok terkunci 10 menit. Bayar sesuai nominal (barang + ongkir), jangan bayar 2x."})
+    # QRIS text: format untuk QRIS, 1 order_id = 1 pembayaran, nominal terkunci
+    qris_text = f"THRIFTORIA|{oid}|TOTAL:{total}|NAMA:{nama}"
+    return jsonify({"order_id":oid, "total":total, "rincian":rincian, "qris_text":qris_text, "status":"Menunggu Pembayaran", "locked":True, "message":"Stok terkunci 10 menit. Bayar sesuai nominal, jangan bayar 2x untuk order yang sama."})
 
 @app.route("/api/order/<oid>")
 def api_order(oid):
@@ -190,10 +279,8 @@ def api_order(oid):
     orders = [o for o in data["orders"] if o.get("order_id")==oid]
     if not orders:
         return jsonify({"error":"Order tidak ditemukan"}), 404
-    subtotal = sum(o["total"] for o in orders)
-    ongkir = orders[0].get("ongkir", 0)
-    total_bayar = subtotal + ongkir
-    return jsonify({"order_id":oid, "total":total_bayar, "subtotal":subtotal, "ongkir":ongkir, "total_bayar":total_bayar, "kurir":orders[0].get("kurir",""), "nama_pembeli":orders[0].get("nama_pembeli",""), "no_hp":orders[0].get("no_hp",""), "alamat":orders[0].get("alamat",""), "kota":orders[0].get("kota",""), "orders":orders, "status":orders[0]["status"]})
+    total = sum(o["total"] for o in orders)
+    return jsonify({"order_id":oid, "total":total, "orders":orders, "status":orders[0]["status"]})
 
 @app.route("/api/confirm-payment/<oid>", methods=["POST"])
 def api_confirm(oid):

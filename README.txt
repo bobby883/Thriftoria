@@ -1,46 +1,48 @@
-THRIFTORIA FIX17 - Form Pengiriman + Ongkir Otomatis
+THRIFTORIA FIX18 - Ongkir ASLI dari Ekspedisi (RajaOngkir) + Fix Ongkir Muncul Sebelum Pilih Kota
 
-YANG BARU:
-1. Di Keranjang, setelah pilih barang, customer WAJIB isi:
-   - Nama lengkap
-   - No HP / WA (biar kurir bisa hubungin)
-   - Alamat lengkap (Jalan, No Rumah, Patokan, RT/RW)
-   - Kecamatan / Kota (contoh: Medan, Indrapura)
-   - Pilih Kurir -> ongkir otomatis kehitung:
-     * J&T Express Rp 11.000
-     * SiCepat Reg Rp 10.000
-     * SiCepat BEST Rp 9.000
-     * JNE Reguler Rp 12.000
-     * JNE YES Rp 22.000
-     * Pos Indonesia Rp 9.000
-     * GoSend Same Day (Medan) Rp 15.000
-     * Ambil di Toko GRATIS Rp 0 (tidak perlu alamat)
+BUG DI SCREENSHOT:
+- Order THR-FV5ZQM: No HP -, Alamat -, Kota -, tapi Ongkir Rp 11.000 sudah muncul.
+- Penyebab: order lama (sebelum Fix17), ongkir flat default 11000, tidak nunggu kota.
+- Perbaikan: ongkir sekarang 0 sampai customer pilih kota + kurir. Kalau belum pilih kota, Total Bayar = Subtotal saja, dan checkout DITOLAK dengan alert "Pilih kota dulu".
 
-2. Hitungan Ongkir:
-   Total Bayar = Subtotal Barang + Ongkir
-   Contoh di screenshot kamu:
-   Cargo Pants Khaki 95.000 + Kaos Oversize 40.000 = Subtotal 135.000
-   + Ongkir J&T 11.000 = Total Bayar 146.000
-   QRIS yang muncul = Rp 146.000 (sudah termasuk ongkir), bukan 135.000 lagi.
+YANG BARU - ONGKIR DARI PIHAK EKSPEDISI:
+1. Customer pilih Kota dari dropdown (diambil dari /api/kota)
+   - Kalau sudah pasang API Key RajaOngkir: daftar kota lengkap 500+ kota dari RajaOngkir
+   - Kalau belum: daftar fallback kota besar (Medan, Jakarta, Bandung, dll) biar tetap jalan
+2. Customer pilih Kurir (J&T, JNE, SiCepat, Pos, AnterAja, TIKI)
+3. Web otomatis hitung ke /api/ongkir:
+   - Berat = jumlah item x 500 gram (1 kaos/cargo = 500 gram)
+   - Kirim origin (Medan/Batu Bara) -> destination (kota customer) -> weight -> courier ke RajaOngkir
+   - RajaOngkir balas ongkir asli + estimasi hari (ETD) + pilihan layanan (REG, YES, dll)
+   - Tampil: "Ongkir ASLI dari ekspedisi (JNT, 500 gram, ke Medan). Estimasi 2-3 hari"
+   - Pilihan layanan: REG Rp 11.000 (2-3 hari) | YES Rp 22.000 (1 hari) dst.
+4. Total Bayar = Subtotal + Ongkir ASLI. QRIS = Total Bayar itu.
 
-3. Di Checkout QRIS & Nota, sekarang tampil:
-   - Blok Pengiriman: Nama, No HP, Alamat, Kota, Kurir
-   - Rincian: Subtotal Barang + Ongkir + Total Bayar
-   - Di Nota yang ke-print, alamat + ongkir juga ikut ke-print di dalam kertas, jadi admin bisa langsung kirim tanpa chat lagi.
+CARA PASANG API KEY RAJAONGKIR (GRATIS, STARTER):
+1. Daftar di https://rajaongkir.com atau https://komerce.id
+2. Login -> Dashboard -> API Key -> Copy API Key Starter (gratis, 1000 hit / hari, cukup untuk thrift)
+3. Di Vercel: Project thriftoria-lilac -> Settings -> Environment Variables -> Add:
+   - Name: RAJAONGKIR_API_KEY
+   - Value: (paste API Key kamu)
+   - Name: ORIGIN_CITY_ID
+   - Value: 152 (Medan) atau cari ID kota Indrapura/Batu Bara di https://rajaongkir.com/dokumentasi
+4. Redeploy tanpa cache.
+5. Tes: pilih kota Medan -> ongkir harusnya muncul angka asli, bukan estimasi lagi. Di bawah ongkir ada tulisan "Ongkir ASLI dari ekspedisi".
 
-4. Cara ganti harga ongkir:
-   Buka api/index.py, cari ONGKIR_TABLE, ubah angka di sana. Misalnya J&T dari 11000 jadi 13000 kalau naik.
-   Kalau mau ongkir akurat per kota (pakai RajaOngkir / API ekspedisi), nanti upgrade ke Fix18 - butuh API key RajaOngkir.
+KALAU BELUM PASANG API KEY:
+- Web tetap jalan, tapi ongkir pakai estimasi flat + tulisan "Ini masih ESTIMASI (belum pasang API Key RajaOngkir)".
+- Jadi tidak menipu customer, jelas itu estimasi.
 
 CARA UPDATE:
 git add .
-git commit -m "form pengiriman ongkir otomatis"
+git commit -m "ongkir asli rajaongkir fix ongkir muncul sebelum kota"
 git push
 Vercel -> Redeploy tanpa cache
 
 CARA TES:
-1. Tambah 2 barang ke keranjang
-2. Isi Nama, No HP, Alamat, Kota, pilih J&T
-3. Lihat Total Bayar berubah (subtotal + ongkir)
-4. Checkout -> QRIS total sudah termasuk ongkir
-5. Bayar -> Nota muncul alamat + ongkir, print nota -> alamat ikut ke-print
+1. Tambah Kaos Oversize ke keranjang
+2. Isi Nama, No HP, Alamat
+3. Kota: belum pilih -> Ongkir harus Rp 0, Total = Rp 35.000 saja
+4. Pilih Kota Medan -> tunggu 2 detik -> Ongkir muncul (misal Rp 11.000), Total jadi Rp 46.000
+5. Ganti kurir JNE -> ongkir berubah lagi
+6. Checkout -> di halaman QRIS, alamat + ongkir + total harus sama dengan yang di keranjang
