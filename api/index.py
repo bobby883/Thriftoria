@@ -100,6 +100,8 @@ ONGKIR_TABLE = {
 import urllib.request, urllib.parse, json as _json, os as _os
 
 RAJAONGKIR_KEY = _os.environ.get("RAJAONGKIR_API_KEY", "")
+BITESHIP_KEY = _os.environ.get("BITESHIP_API_KEY", "")
+# PRIORITAS ONGKIR: 1) Biteship (lebih baru, tidak ke-flag McAfee) 2) RajaOngkir/Komerce 3) Estimasi flat
 # ID kota asal: Thriftoria di Indrapura, Batu Bara, Sumut.
 # RajaOngkir Starter pakai city_id. Kalau belum tau, isi 0 -> nanti diisi dari daftar kota di admin.
 # Default sementara: Medan (city_id 152) sebagai hub terdekat, biar ongkir kehitung.
@@ -144,7 +146,7 @@ def api_kota():
         {"id":"445","label":"Manado, Sulawesi Utara"},
         {"id":"492","label":"Jayapura, Papua"},
     ]
-    return jsonify({"source":"fallback", "cities": fallback, "note":"Daftar kota fallback. Pasang RAJAONGKIR_API_KEY di Vercel untuk daftar lengkap + ongkir asli."})
+    return jsonify({"source":"fallback", "cities": fallback, "note":"Daftar kota fallback. Pasang BITESHIP_API_KEY (biteship.com) atau RAJAONGKIR_API_KEY (komerce.id) di Vercel untuk ongkir asli."})
 
 @app.route("/api/ongkir", methods=["POST"])
 def api_ongkir():
@@ -159,10 +161,23 @@ def api_ongkir():
     courier = str(body.get("courier","jne")).lower()
     if not dest:
         return jsonify({"error":"Pilih kota tujuan dulu", "ongkir":0}), 400
+    # 1) Coba Biteship dulu (daftar di biteship.com, tidak ke-flag McAfee)
+    if BITESHIP_KEY:
+        try:
+            import urllib.request as _ur
+            payload = _json.dumps({"origin_postal_code":"21172", "destination_postal_code": body.get("destination_postal_code","20111"), "couriers": courier, "items":[{"name":"Thriftoria","description":"Pakaian thrift","value":50000,"length":30,"width":20,"height":5,"weight":weight}]}).encode()
+            req2 = urllib.request.Request("https://api.biteship.com/v1/rates/couriers", data=payload, headers={"Authorization": BITESHIP_KEY, "Content-Type":"application/json"})
+            with urllib.request.urlopen(req2, timeout=15) as r2:
+                j2 = _json.loads(r2.read().decode())
+                if j2.get("success") and j2.get("pricing"):
+                    p0 = j2["pricing"][0]
+                    return jsonify({"source":"biteship", "courier":courier, "weight_gram":weight, "ongkir": p0["price"], "service": p0.get("courier_service_name",""), "etd": p0.get("duration","")})
+        except Exception as e:
+            pass
     # Kalau belum ada API key -> fallback flat, tapi tandai estimasi
     if not RAJAONGKIR_KEY:
         flat = {"jne":12000, "jnt":11000, "sicepat":10000, "pos":9000, "anteraja":10000, "tiki":13000, "wahana":12000}
-        return jsonify({"source":"estimasi", "ongkir": flat.get(courier,11000), "courier":courier, "weight_gram":weight, "note":"Ini masih estimasi flat. Pasang RAJAONGKIR_API_KEY di Vercel untuk ongkir asli dari ekspedisi."})
+        return jsonify({"source":"estimasi", "ongkir": flat.get(courier,11000), "courier":courier, "weight_gram":weight, "note":"Ini masih estimasi flat. Pasang BITESHIP_API_KEY (daftar di biteship.com) atau RAJAONGKIR_API_KEY (daftar di komerce.id) di Vercel untuk ongkir asli."})
     # Ada API key -> tanya ke RajaOngkir
     try:
         data_post = urllib.parse.urlencode({"origin": ORIGIN_CITY_ID, "destination": dest, "weight": weight, "courier": courier}).encode()
